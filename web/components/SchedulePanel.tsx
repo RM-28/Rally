@@ -204,6 +204,7 @@ export default function SchedulePanel({ refreshKey }: { refreshKey: number }) {
       {sched && plan && other ? (
         <>
           <TeamCalendar
+            key={sched.ts}
             plan={plan}
             people={sched.people}
             projects={sched.projects}
@@ -219,7 +220,7 @@ export default function SchedulePanel({ refreshKey }: { refreshKey: number }) {
                 {p}
               </span>
             ))}
-            <span>· working days 9:00–17:00 · hatched = out of office · hover a task for times</span>
+            <span>· working days 9:00–17:00 · striped = out of office · hover a task for details</span>
           </div>
         </>
       ) : (
