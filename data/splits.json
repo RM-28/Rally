@@ -1,0 +1,170 @@
+{
+  "quick": [
+    "ft06",
+    "la01"
+  ],
+  "practice": [
+    "ta41",
+    "ta42",
+    "ta43",
+    "ta44",
+    "ta45",
+    "ta51",
+    "ta52",
+    "ta53",
+    "ta54",
+    "ta55",
+    "swv11",
+    "swv12",
+    "swv13",
+    "swv14",
+    "swv15"
+  ],
+  "check": [
+    "ta31",
+    "ta32",
+    "ta33",
+    "swv06",
+    "swv07",
+    "swv08"
+  ],
+  "heldout": [
+    "ta46",
+    "ta47",
+    "ta48",
+    "ta49",
+    "ta50",
+    "ta56",
+    "ta57",
+    "ta58",
+    "ta59",
+    "ta60",
+    "ta61",
+    "ta62",
+    "ta63",
+    "ta64",
+    "ta65",
+    "swv16",
+    "swv17",
+    "swv18",
+    "swv19",
+    "swv20"
+  ],
+  "fresh": [
+    "fresh01",
+    "fresh02",
+    "fresh03",
+    "fresh04",
+    "fresh05",
+    "fresh06",
+    "fresh07",
+    "fresh08",
+    "fresh09",
+    "fresh10"
+  ],
+  "events": [
+    "event01",
+    "event02",
+    "event03",
+    "event04",
+    "event05",
+    "event06",
+    "event07",
+    "event08",
+    "event09",
+    "event10"
+  ],
+  "seeds": {
+    "fresh01": {
+      "seed": 20261011,
+      "jobs": 30,
+      "machines": 20
+    },
+    "event01": {
+      "seed": 91011,
+      "from": "fresh01"
+    },
+    "fresh02": {
+      "seed": 20261012,
+      "jobs": 30,
+      "machines": 20
+    },
+    "event02": {
+      "seed": 91012,
+      "from": "fresh02"
+    },
+    "fresh03": {
+      "seed": 20261013,
+      "jobs": 30,
+      "machines": 20
+    },
+    "event03": {
+      "seed": 91013,
+      "from": "fresh03"
+    },
+    "fresh04": {
+      "seed": 20261014,
+      "jobs": 30,
+      "machines": 20
+    },
+    "event04": {
+      "seed": 91014,
+      "from": "fresh04"
+    },
+    "fresh05": {
+      "seed": 20261015,
+      "jobs": 30,
+      "machines": 20
+    },
+    "event05": {
+      "seed": 91015,
+      "from": "fresh05"
+    },
+    "fresh06": {
+      "seed": 20261016,
+      "jobs": 50,
+      "machines": 15
+    },
+    "event06": {
+      "seed": 91016,
+      "from": "fresh06"
+    },
+    "fresh07": {
+      "seed": 20261017,
+      "jobs": 50,
+      "machines": 15
+    },
+    "event07": {
+      "seed": 91017,
+      "from": "fresh07"
+    },
+    "fresh08": {
+      "seed": 20261018,
+      "jobs": 50,
+      "machines": 15
+    },
+    "event08": {
+      "seed": 91018,
+      "from": "fresh08"
+    },
+    "fresh09": {
+      "seed": 20261019,
+      "jobs": 50,
+      "machines": 15
+    },
+    "event09": {
+      "seed": 91019,
+      "from": "fresh09"
+    },
+    "fresh10": {
+      "seed": 20261020,
+      "jobs": 50,
+      "machines": 15
+    },
+    "event10": {
+      "seed": 91020,
+      "from": "fresh10"
+    }
+  },
+  "generated_at_commit": null
+}
