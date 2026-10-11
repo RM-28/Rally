@@ -270,6 +270,93 @@ async def run_stop(x_admin_token: str | None = Header(default=None)):
     return {"ok": True}
 
 
+# ---------- schedule your team (uses the frozen best strategy; never tunes anything) ----------
+
+SCHEDULE_LOCK = asyncio.Semaphore(1)  # one at a time: keep CPU free for live runs
+_best_code: dict = {}
+
+
+def best_strategy() -> dict:
+    """The strategy scored by final_eval (frozen), else the latest finished run's best."""
+    if not _best_code:
+        sid = None
+        lock = config.DATA / "final_eval.json"
+        if lock.exists():
+            sid = json.loads(lock.read_text())["strategy_id"]
+        else:
+            run = store.db().runs.find_one({"tag": None, "status": "finished"}, sort=[("started_at", -1)])
+            sid = run and run.get("best_strategy_id")
+        doc = sid and store.db().strategies.find_one({"_id": sid}, {"code": 1, "bot": 1, "practice_gap": 1})
+        if not doc:
+            raise HTTPException(503, "no trained strategy available yet")
+        _best_code.update(id=doc["_id"], code=doc["code"], bot=doc["bot"], gap=doc.get("practice_gap"))
+    return _best_code
+
+
+class TaskIn(BaseModel):
+    project: str = Field(min_length=1, max_length=60)
+    person: str = Field(min_length=1, max_length=60)
+    hours: int
+
+
+class DowntimeIn(BaseModel):
+    person: str
+    start: int
+    end: int
+
+
+class ReleaseIn(BaseModel):
+    project: str
+    at: int
+
+
+class ScheduleIn(BaseModel):
+    tasks: list[TaskIn]
+    downtime: list[DowntimeIn] = []
+    release: list[ReleaseIn] = []
+
+
+@app.post("/api/schedule")
+async def schedule_team(body: ScheduleIn):
+    from engine.jobs import get_job
+    from engine.jobs.jobshop.custom import build_instance
+    from engine.runner.core import run_child
+
+    job = get_job("jobshop")
+    try:
+        inst, people, projects = build_instance([t.model_dump() for t in body.tasks],
+                                                [d.model_dump() for d in body.downtime],
+                                                [r.model_dump() for r in body.release])
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from None
+    best = await aw(best_strategy)
+    tl = config.TIME_LIMIT_S
+    args = job.call_args(inst, tl)
+    async with SCHEDULE_LOCK:
+        fcfs_res, bot_res = await asyncio.gather(
+            aw(run_child, job.baselines()["fcfs"], job.entrypoint, args, tl),
+            aw(run_child, best["code"], job.entrypoint, args, tl))
+    out = {}
+    for name, res in (("fcfs", fcfs_res), ("bot", bot_res)):
+        if "error" in res or res.get("secs", 0) > 2.5 * tl:
+            raise HTTPException(500, f"{name} failed: {res.get('error', 'too slow')}")
+        try:
+            out[name] = job.showcase(inst, res["output"])
+        except ValueError as exc:
+            raise HTTPException(500, f"{name} produced an invalid schedule: {exc}") from None
+    f, b = out["fcfs"]["makespan"], out["bot"]["makespan"]
+    kept_simple = b > f  # the strategy is a heuristic; never hand the user a worse plan than the simple one
+    if kept_simple:
+        out["bot"], b = out["fcfs"], f
+    return {
+        "people": people, "projects": projects,
+        "fcfs": out["fcfs"], "bot": out["bot"],
+        "hours_saved": f - b, "pct_shorter": round(100 * (f - b) / f, 1) if f else 0.0,
+        "kept_simple": kept_simple,
+        "strategy": {"id": best["id"], "bot": best["bot"]},
+    }
+
+
 # ---------- fallback: serve the static board export from the same origin ----------
 
 WEB_OUT = config.ROOT / "web" / "out"

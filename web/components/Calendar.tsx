@@ -5,7 +5,19 @@ import type { Showcase } from "@/lib/types";
 
 const hue = (j: number) => (j * 137.508) % 360;
 
-export default function Calendar({ showcase, baselineMakespan }: { showcase: Showcase; baselineMakespan?: number }) {
+export default function Calendar({
+  showcase,
+  baselineMakespan,
+  baselineLabel = "FCFS",
+  rowLabels,
+  jobLabels,
+}: {
+  showcase: Showcase;
+  baselineMakespan?: number;
+  baselineLabel?: string;
+  rowLabels?: string[];
+  jobLabels?: string[];
+}) {
   // remember the previous finish line so the move left is visible
   const prev = useRef<number | null>(null);
   const [ghost, setGhost] = useState<number | null>(null);
@@ -16,8 +28,9 @@ export default function Calendar({ showcase, baselineMakespan }: { showcase: Sho
 
   const scaleMax = Math.max(showcase.makespan, ghost ?? 0, baselineMakespan ?? 0);
   const W = 1000;
-  const rowH = 14;
+  const rowH = showcase.n_machines <= 8 ? 26 : 14;
   const labelW = 72;
+  const fontSize = rowH > 14 ? 12 : 9;
   const H = showcase.n_machines * rowH + 24;
   const x = (t: number) => labelW + (t / scaleMax) * (W - labelW - 8);
 
@@ -25,8 +38,8 @@ export default function Calendar({ showcase, baselineMakespan }: { showcase: Sho
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="schedule calendar">
       {showcase.rows.map((ops, m) => (
         <g key={m}>
-          <text x={4} y={m * rowH + 11} fontSize={9} fill="#8fa1c0" fontFamily="var(--font-plex-mono)">
-            person {m + 1}
+          <text x={4} y={m * rowH + rowH / 2 + fontSize / 3} fontSize={fontSize} fill="#8fa1c0" fontFamily="var(--font-plex-mono)">
+            {(rowLabels?.[m] ?? `person ${m + 1}`).slice(0, 11)}
           </text>
           <rect x={labelW} y={m * rowH + 1} width={W - labelW - 8} height={rowH - 2} fill="#0d1a33" />
           {(showcase.downtime[String(m)] ?? []).map(([a, b], i) => (
@@ -43,7 +56,7 @@ export default function Calendar({ showcase, baselineMakespan }: { showcase: Sho
               fill={`hsl(${hue(j)} 70% 58%)`}
               style={{ transition: "x 0.8s ease, width 0.8s ease" }}
             >
-              <title>{`project ${j + 1}, step ${k + 1}: ${s} to ${e}`}</title>
+              <title>{`${jobLabels?.[j] ?? `project ${j + 1}`}, task ${k + 1}: ${s} to ${e}`}</title>
             </rect>
           ))}
         </g>
@@ -65,7 +78,7 @@ export default function Calendar({ showcase, baselineMakespan }: { showcase: Sho
       </text>
       {baselineMakespan != null && (
         <text x={x(baselineMakespan)} y={H - 6} fontSize={11} fill="#ff5d6c" textAnchor="end" fontFamily="var(--font-plex-mono)">
-          FCFS {baselineMakespan}
+          {baselineLabel} {baselineMakespan}
         </text>
       )}
     </svg>

@@ -4,6 +4,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import BotGrid, { type LiveBot } from "@/components/BotGrid";
 import Calendar from "@/components/Calendar";
+import SchedulePanel from "@/components/SchedulePanel";
 import ScoreChart from "@/components/ScoreChart";
 import StrategyModal from "@/components/StrategyModal";
 import { API_URL, APP_NAME } from "@/lib/config";
@@ -367,6 +368,8 @@ export default function Board() {
           </aside>
         </div>
       )}
+
+      <SchedulePanel />
 
       {open && <StrategyModal id={open} onClose={() => setOpen(null)} />}
     </main>
