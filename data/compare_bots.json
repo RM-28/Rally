@@ -1,0 +1,23 @@
+[
+  {
+    "bots": 1,
+    "seed": 0,
+    "run_id": "run-d88b71af",
+    "practice": 26.399,
+    "check": 32.133
+  },
+  {
+    "bots": 1,
+    "seed": 1,
+    "run_id": "run-659e75d0",
+    "practice": 17.018,
+    "check": 18.735
+  },
+  {
+    "bots": 2,
+    "seed": 0,
+    "run_id": "run-fdd91659",
+    "practice": 20.374,
+    "check": 25.48
+  }
+]

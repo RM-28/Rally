@@ -6,11 +6,12 @@ import type { CurvePoint } from "@/lib/types";
 type Props = {
   curve: CurvePoint[];
   baseline?: number;
+  strongBaseline?: number;
   solver?: number;
   solverSecs?: number;
 };
 
-export default function ScoreChart({ curve, baseline, solver, solverSecs }: Props) {
+export default function ScoreChart({ curve, baseline, strongBaseline, solver, solverSecs }: Props) {
   const data = curve.map((c) => ({ round: c.n, practice: c.best_ever, check: c.best_ever_check, roundBest: c.practice }));
   const vals = data.flatMap((d) => [d.practice, d.check, d.roundBest]).filter((v): v is number => v != null);
   const top = Math.max(baseline ?? 0, ...vals, 10);
@@ -28,6 +29,9 @@ export default function ScoreChart({ curve, baseline, solver, solverSecs }: Prop
         <Legend wrapperStyle={{ fontSize: 12 }} />
         {baseline != null && (
           <ReferenceLine y={baseline} stroke="#ff5d6c" strokeDasharray="6 4" label={{ value: `first come, first served ${baseline.toFixed(1)}%`, fill: "#ff5d6c", fontSize: 11, position: "insideTopRight" }} />
+        )}
+        {strongBaseline != null && (
+          <ReferenceLine y={strongBaseline} stroke="#ffb547" strokeOpacity={0.7} strokeDasharray="6 4" label={{ value: `best simple rule ${strongBaseline.toFixed(1)}%`, fill: "#ffb547", fontSize: 11, position: "insideTopLeft" }} />
         )}
         {solver != null && (
           <ReferenceLine y={solver} stroke="#3ddc97" strokeDasharray="6 4" label={{ value: `solver (${solverSecs ?? "?"}s) ${solver.toFixed(1)}%`, fill: "#3ddc97", fontSize: 11, position: "insideBottomRight" }} />

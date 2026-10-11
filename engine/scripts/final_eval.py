@@ -98,6 +98,12 @@ def main():
     print(f"{'set':10s}" + "".join(f"{n:>14s}" for n in contenders) + f"{'reference':>12s}")
     for s in FINAL_SETS:
         print(f"{s:10s}" + "".join(f"{str(summary[s][n]):>14s}" for n in contenders) + f"{'0.0':>12s}")
+    print("\nRelative improvement of final vs each baseline (share of the gap removed):")
+    for s in FINAL_SETS:
+        fin = summary[s]["final"]
+        parts = [f"vs {n}: {100 * (summary[s][n] - fin) / summary[s][n]:.0f}%"
+                 for n in contenders if n != "final" and fin is not None and summary[s][n]]
+        print(f"  {s:10s} " + "  ".join(parts))
     print(f"\nwritten to {LOCK}")
 
 

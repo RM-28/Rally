@@ -255,8 +255,8 @@ export default function Board() {
       {admin && (
         <div className="panel px-4 py-2 flex gap-2 items-center text-sm">
           <span className="text-ink-dim">admin</span>
-          <button className="border border-navy-600 rounded px-3 py-1" onClick={() => control("start", { n_bots: 4, rounds: 8 })}>start 4 bots</button>
-          <button className="border border-navy-600 rounded px-3 py-1" onClick={() => control("start", { n_bots: 8, rounds: 8 })}>start 8 bots</button>
+          <button className="border border-navy-600 rounded px-3 py-1" onClick={() => control("start", { n_bots: 4, rounds: 10 })}>start 4 bots · 10 rounds</button>
+          <button className="border border-navy-600 rounded px-3 py-1" onClick={() => control("start", { n_bots: 8, rounds: 10 })}>start 8 bots · 10 rounds</button>
           <button className="border border-navy-600 rounded px-3 py-1" onClick={() => control("pause")}>pause</button>
           <button className="border border-navy-600 rounded px-3 py-1" onClick={() => control("resume")}>resume</button>
           <button className="border border-bad text-bad rounded px-3 py-1" onClick={() => control("stop")}>stop</button>
@@ -275,7 +275,7 @@ export default function Board() {
                 <h2 className="font-semibold">Gap to best known schedule, per round</h2>
                 <span className="text-xs text-ink-dim">lower is better · check set is never shown to the bots</span>
               </div>
-              <ScoreChart curve={curve} baseline={fcfs?.practice} solver={state?.solver?.practice} solverSecs={state?.solver?.secs} />
+              <ScoreChart curve={curve} baseline={fcfs?.practice} strongBaseline={state?.baselines?.simple_rule?.practice} solver={state?.solver?.practice} solverSecs={state?.solver?.secs} />
             </section>
 
             {state?.showcase && (
