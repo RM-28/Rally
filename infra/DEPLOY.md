@@ -66,9 +66,20 @@ cp .env.example .env   # fill in; WEB_ORIGIN = the Amplify URL
 ## Board on Amplify
 
 Amplify console, Create app, GitHub, pick the repo and `main`, tick "my app is a monorepo", app root `web`.
-`amplify.yml` at the repo root holds the build settings. Add the environment variable
-`NEXT_PUBLIC_API_URL=https://1-2-3-4.sslip.io` before the first build (it is baked in at build time,
-so changing it later needs a redeploy).
+`amplify.yml` at the repo root holds the build settings. Before the first build, add these under
+App settings > Environment variables (they are baked in at build time, so changing one needs a redeploy):
+
+| Variable | Value | Needed |
+|---|---|---|
+| `AMPLIFY_MONOREPO_APP_ROOT` | `web` | yes (Amplify sets it when you tick monorepo) |
+| `NEXT_PUBLIC_API_URL` | the engine, e.g. `https://1-2-3-4.sslip.io` | yes: the build stops without it |
+| `NEXT_PUBLIC_BOARD_URL` | e.g. `https://main.<app-id>.amplifyapp.com` | optional: the QR code, defaults to the browser's address |
+| `NEXT_PUBLIC_LUMINAL_PRICE_PER_M` | e.g. `0.30` | optional: Usage card cost, else viewers type a rate |
+| `NEXT_PUBLIC_RALLY_USER` | a seeded Rally person id | optional: defaults to `test` |
+
+All of these are public (they reach the browser). Secrets stay in the engine's `.env` on EC2, never in
+Amplify. The build copies every `NEXT_PUBLIC_*` variable into `web/.env.production` and logs their names.
+The full list with comments is in `web/.env.example`; the engine's is in `.env.example`.
 
 Fallback (same origin, no CORS/HTTPS fights): `cd web && STATIC_EXPORT=1 NEXT_PUBLIC_API_URL= npm run build`,
 then FastAPI serves `web/out` at `/`.

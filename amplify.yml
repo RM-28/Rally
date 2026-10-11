@@ -5,9 +5,20 @@ applications:
       phases:
         preBuild:
           commands:
+            # NEXT_PUBLIC_* values are baked into the bundle at build time, so they must be set in the
+            # Amplify console (App settings > Environment variables) before this build runs.
+            - |
+              if [ -z "$NEXT_PUBLIC_API_URL" ]; then
+                echo "NEXT_PUBLIC_API_URL is not set. Add it in Amplify (App settings > Environment variables),"
+                echo "e.g. https://1-2-3-4.sslip.io (the engine on EC2), then redeploy. See infra/DEPLOY.md."
+                exit 1
+              fi
             - npm ci
         build:
           commands:
+            # hand the board's public settings to Next.js; only NEXT_PUBLIC_* ever reaches the browser
+            - env | grep -E '^NEXT_PUBLIC_' > .env.production
+            - echo "Building with $(cut -d= -f1 .env.production | tr '\n' ' ')"
             - npm run build
       artifacts:
         baseDirectory: .next
