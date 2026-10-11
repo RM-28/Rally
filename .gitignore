@@ -9,3 +9,11 @@ out/
 infra/build/
 *.zip
 data/solver_line_*.json
+.npmrc
+
+*.pdf
+/package.json
+/package-lock.json
+.claude/worktrees/
+.DS_Store
+*.log
