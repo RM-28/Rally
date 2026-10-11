@@ -7,6 +7,7 @@ from __future__ import annotations
 import asyncio
 import datetime as dt
 import json
+import time
 
 from bson import ObjectId
 from fastapi import FastAPI, Header, HTTPException
@@ -23,6 +24,14 @@ app.add_middleware(CORSMiddleware, allow_origins=[o.strip() for o in config.WEB_
                    allow_methods=["GET", "POST"], allow_headers=["*"])
 
 ACTIVE: dict = {"loop": None, "task": None}
+
+
+@app.on_event("startup")
+async def _startup():
+    try:
+        await asyncio.to_thread(store.ensure_indexes)
+    except Exception as exc:  # noqa: BLE001 - the board should still come up
+        print(f"[api] could not ensure indexes: {exc}")
 PRESENT_SECS = 30
 
 
@@ -94,6 +103,7 @@ def build_state(run_id: str | None) -> dict:
         "tests_run": (latest or {}).get("tests_run", 0),
         "messages": msgs,
         "people": people,
+        "live_mode": HUB.mode,
         "last_event_id": str(e["_id"]) if (e := d.events.find_one({"run_id": rid}, sort=[("_id", -1)])) else None,
     })
 
@@ -124,17 +134,48 @@ async def lineage(sid: str):
     return clean(await aw(store.lineage, sid))
 
 
-# ---------- live stream: one poller fans out to every client ----------
+# ---------- live stream: one MongoDB change stream fans out to every client ----------
 
 class Hub:
+    """Watches the `events` collection with a MongoDB change stream (inserts only) and pushes each new
+    event to every connected browser. If change streams are unavailable it falls back to polling by _id,
+    so the board keeps working either way. One watcher serves all viewers."""
+
     def __init__(self):
         self.subs: set[asyncio.Queue] = set()
         self.task: asyncio.Task | None = None
         self.last_id: ObjectId | None = None
+        self.mode = "starting"   # "change_stream" | "polling"; shown in /api/state
 
-    async def run(self):
-        last = await aw(lambda: store.db().events.find_one(sort=[("_id", -1)]))
-        self.last_id = last["_id"] if last else ObjectId.from_datetime(store.now())
+    def publish(self, e: dict):
+        if self.last_id and e["_id"] <= self.last_id:
+            return  # already sent (resume overlap)
+        self.last_id = e["_id"]
+        payload = json.dumps(clean(e))
+        for q in list(self.subs):
+            if q.qsize() < 1000:
+                q.put_nowait(payload)
+
+    def _watch(self, loop: asyncio.AbstractEventLoop):
+        """Blocking change-stream loop, run in a worker thread. Resumes after transient errors."""
+        resume = None
+        failures = 0
+        while failures < 3:
+            try:
+                pipeline = [{"$match": {"operationType": "insert"}}]
+                with store.db().events.watch(pipeline, resume_after=resume) as cs:
+                    self.mode = "change_stream"
+                    failures = 0
+                    for change in cs:
+                        resume = cs.resume_token
+                        loop.call_soon_threadsafe(self.publish, change["fullDocument"])
+            except Exception as exc:  # noqa: BLE001
+                failures += 1
+                print(f"[hub] change stream error ({failures}/3): {exc}")
+                time.sleep(2)
+        raise RuntimeError("change streams unavailable")
+
+    async def _poll(self):
         while True:
             try:
                 new = await aw(lambda: list(store.db().events.find({"_id": {"$gt": self.last_id}}).sort("_id", 1).limit(500)))
@@ -143,12 +184,19 @@ class Hub:
                 await asyncio.sleep(3)
                 continue
             for e in new:
-                self.last_id = e["_id"]
-                payload = json.dumps(clean(e))
-                for q in list(self.subs):
-                    if q.qsize() < 1000:
-                        q.put_nowait(payload)
+                self.publish(e)
             await asyncio.sleep(1.0)
+
+    async def run(self):
+        last = await aw(lambda: store.db().events.find_one(sort=[("_id", -1)]))
+        self.last_id = last["_id"] if last else ObjectId.from_datetime(store.now())
+        if config.MONGODB_URI != "mock":
+            try:
+                await asyncio.to_thread(self._watch, asyncio.get_running_loop())
+            except Exception as exc:  # noqa: BLE001
+                print(f"[hub] falling back to polling: {exc}")
+        self.mode = "polling"
+        await self._poll()
 
     def subscribe(self) -> asyncio.Queue:
         if self.task is None or self.task.done():

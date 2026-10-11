@@ -5,15 +5,26 @@ import { API_URL } from "@/lib/config";
 import { diffLines } from "@/lib/diff";
 import type { StrategyDoc } from "@/lib/types";
 
+type Ancestor = { _id: string; bot: string; round: number; note?: string; practice_gap: number | null; delta?: number | null; depth: number };
+
 export default function StrategyModal({ id, onClose }: { id: string; onClose: () => void }) {
   const [doc, setDoc] = useState<StrategyDoc | null>(null);
-  const [view, setView] = useState<"diff" | "code">("diff");
+  const [view, setView] = useState<"diff" | "code" | "tree">("diff");
+  const [tree, setTree] = useState<Ancestor[] | null>(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/strategies/${encodeURIComponent(id)}`)
       .then((r) => r.json())
       .then(setDoc)
       .catch(() => setDoc(null));
+  }, [id]);
+
+  useEffect(() => {
+    // ancestors via MongoDB $graphLookup (one query walks parent_id all the way back)
+    fetch(`${API_URL}/api/lineage/${encodeURIComponent(id)}`)
+      .then((r) => r.json())
+      .then(setTree)
+      .catch(() => setTree([]));
   }, [id]);
 
   useEffect(() => {
@@ -46,9 +57,9 @@ export default function StrategyModal({ id, onClose }: { id: string; onClose: ()
             <div className="text-ink-dim">loading…</div>
           )}
           <div className="flex gap-2 shrink-0">
-            {(["diff", "code"] as const).map((v) => (
+            {(["diff", "code", "tree"] as const).map((v) => (
               <button key={v} onClick={() => setView(v)} className={`px-3 py-1 rounded-md text-sm border ${view === v ? "border-blue text-blue" : "border-navy-600 text-ink-dim"}`}>
-                {v === "diff" ? "what changed" : "full code"}
+                {v === "diff" ? "what changed" : v === "code" ? "full code" : "family tree"}
               </button>
             ))}
             <button onClick={onClose} className="px-3 py-1 rounded-md text-sm border border-navy-600">
@@ -57,7 +68,29 @@ export default function StrategyModal({ id, onClose }: { id: string; onClose: ()
           </div>
         </div>
         <pre className="num text-[12px] leading-[1.45] overflow-auto p-4 flex-1">
-          {!doc?.code ? (
+          {view === "tree" ? (
+            <div className="font-sans text-sm flex flex-col gap-2 whitespace-normal">
+              <div className="text-xs text-ink-dim">How this strategy evolved, newest first (one MongoDB $graphLookup over parent_id)</div>
+              {doc && (
+                <div className="border-l-2 border-blue pl-3">
+                  <div className="num">
+                    round {doc.round} · <span className="text-blue">{doc.bot}</span> · {doc.practice_gap != null ? `${doc.practice_gap.toFixed(2)}%` : "–"}
+                  </div>
+                  <div className="text-ink-dim">{doc.note}</div>
+                </div>
+              )}
+              {(tree ?? []).map((a) => (
+                <div key={a._id} className="border-l-2 border-navy-600 pl-3">
+                  <div className="num">
+                    round {a.round} · {a.bot} · {a.practice_gap != null ? `${a.practice_gap.toFixed(2)}%` : "–"}
+                    {a.delta != null && <span className={a.delta < 0 ? "text-good" : "text-bad"}> ({a.delta > 0 ? "+" : ""}{a.delta.toFixed(2)})</span>}
+                  </div>
+                  <div className="text-ink-dim">{a.note}</div>
+                </div>
+              ))}
+              {tree && tree.length === 0 && <div className="text-ink-dim">No ancestors: this is a starting baseline.</div>}
+            </div>
+          ) : !doc?.code ? (
             <span className="text-ink-dim">no code</span>
           ) : view === "diff" && diff ? (
             diff

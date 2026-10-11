@@ -1,0 +1,152 @@
+[
+  {
+    "bots": 2,
+    "minutes": 15,
+    "curve": {
+      "run_id": "run-322a8be6",
+      "rounds_in_budget": 10,
+      "proposals": 22,
+      "by_minute": {
+        "0": {
+          "practice": 26.399,
+          "check": 32.133
+        },
+        "1": {
+          "practice": 21.738,
+          "check": 26.811
+        },
+        "2": {
+          "practice": 21.267,
+          "check": 26.767
+        },
+        "3": {
+          "practice": 21.267,
+          "check": 26.767
+        },
+        "4": {
+          "practice": 21.267,
+          "check": 26.767
+        },
+        "5": {
+          "practice": 21.267,
+          "check": 26.767
+        },
+        "6": {
+          "practice": 20.857,
+          "check": 27.977
+        },
+        "7": {
+          "practice": 20.857,
+          "check": 27.977
+        },
+        "8": {
+          "practice": 20.165,
+          "check": 23.147
+        },
+        "9": {
+          "practice": 20.165,
+          "check": 23.147
+        },
+        "10": {
+          "practice": 18.853,
+          "check": 22.565
+        },
+        "11": {
+          "practice": 18.853,
+          "check": 22.565
+        },
+        "12": {
+          "practice": 18.853,
+          "check": 22.565
+        },
+        "13": {
+          "practice": 18.834,
+          "check": 23.302
+        },
+        "14": {
+          "practice": 18.834,
+          "check": 23.302
+        },
+        "15": {
+          "practice": 18.834,
+          "check": 23.302
+        }
+      }
+    }
+  },
+  {
+    "bots": 8,
+    "minutes": 15,
+    "curve": {
+      "run_id": "run-f8c98171",
+      "rounds_in_budget": 2,
+      "proposals": 24,
+      "by_minute": {
+        "0": {
+          "practice": 26.399,
+          "check": 32.133
+        },
+        "1": {
+          "practice": 26.399,
+          "check": 32.133
+        },
+        "2": {
+          "practice": 26.399,
+          "check": 32.133
+        },
+        "3": {
+          "practice": 26.399,
+          "check": 32.133
+        },
+        "4": {
+          "practice": 26.399,
+          "check": 32.133
+        },
+        "5": {
+          "practice": 26.399,
+          "check": 32.133
+        },
+        "6": {
+          "practice": 26.399,
+          "check": 32.133
+        },
+        "7": {
+          "practice": 16.909,
+          "check": 20.429
+        },
+        "8": {
+          "practice": 16.909,
+          "check": 20.429
+        },
+        "9": {
+          "practice": 16.909,
+          "check": 20.429
+        },
+        "10": {
+          "practice": 16.909,
+          "check": 20.429
+        },
+        "11": {
+          "practice": 16.909,
+          "check": 20.429
+        },
+        "12": {
+          "practice": 16.909,
+          "check": 20.429
+        },
+        "13": {
+          "practice": 16.909,
+          "check": 20.429
+        },
+        "14": {
+          "practice": 16.909,
+          "check": 20.429
+        },
+        "15": {
+          "practice": 16.909,
+          "check": 20.429
+        }
+      }
+    }
+  }
+]

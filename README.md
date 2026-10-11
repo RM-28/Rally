@@ -137,6 +137,22 @@ Main run cost: 102 Luminal calls, ~860k tokens, 26 minutes. 80 of 80 bot proposa
 - Humans are part of the loop: a viewer's message after round 3 ("try a proper tabu search…") became Atlas's round-4 assignment, which set the record.
 - The playbook after round 10 has 12 measured lessons, for example *"DO: tabu over critical-block boundary swaps, random 5–15 tenure per accepted swap (−2.07, −1.67)"* and *"AVOID: acceptance rules — decaying temperature/geometric cooling (+0.38, +0.60)…"*.
 
+### Do parallel agents find better solutions faster? (head-to-head)
+
+Same 15-minute wall-clock budget, no human steering, run one after the other on the same machine so they never share CPU. Only rounds finished inside the budget count (`engine/scripts/head_to_head.py`, data in [`data/head_to_head.json`](data/head_to_head.json)).
+
+| Team | Rounds in 15 min | Team best @ 5 min | @ 10 min | @ 15 min | Unseen check set @ 15 min | Luminal tokens |
+|---|---|---|---|---|---|---|
+| 2 bots | 10 | **21.27%** | 18.85% | 18.83% | 23.30% | 278k |
+| 8 bots | 2 | 26.40% (first round not done yet) | **16.91%** | **16.91%** | **20.43%** | 304k |
+
+- The 8-bot team's **first round alone** (16.91%, about 6 minutes) beat everything the 2-bot team found in **10 rounds and 15 minutes** (18.83%), and the gap held on the unseen check set (20.4% vs 23.3%).
+- Breadth beats depth here: 8 different ideas per round finds a good direction sooner than 2 ideas refined over many rounds.
+- It did not cost more model budget: both runs used a similar number of tokens (278k vs 304k), because the 2-bot team spent its tokens on more rounds.
+- The trade-off: a wider round takes longer (about 6 minutes vs about 1.5), so the small team leads for the first few minutes.
+
+This is one run per team size, so treat it as a head-to-head rather than a statistical result. The 3-round comparison below shows the run-to-run noise.
+
 ### Does the team size matter?
 
 1, 2, 4 and 8 bots, 3 rounds each, 2 seeds each (best practice gap per run):
@@ -220,6 +236,53 @@ data/               splits, generated instances, references, results
 ```
 
 A new problem is a new folder under `engine/jobs/` implementing the `Job` interface (`brief`, `sets`, `load`, `baselines`, `score`, `reference`, `showcase`). Nothing else in the engine knows about scheduling.
+
+## How MongoDB Atlas powers it
+
+MongoDB Atlas is the team's shared memory and the board's live wire. Every bot, every strategy, every score and every human message lives there, so any number of boards (laptops, phones, the deployed server) watch and steer the same run.
+
+**Why a document database fits.** Each strategy a bot writes is one self-contained document: its code, the change it was assigned, its note, its parent, its scores and every individual test run. Strategies of different shapes and sizes, nested run results and evolving fields need no schema migrations mid-hackathon.
+
+```json
+{
+  "_id": "run-bc1e8aff-r8-Atlas",
+  "run_id": "run-bc1e8aff", "round": 8, "bot": "Atlas",
+  "parent_id": "run-bc1e8aff-r6-Atlas",
+  "change": "Add an aspiration criterion to the tabu loop: ...",
+  "note": "Aspiration now explicitly overrides tabu on new best-ever swaps ...",
+  "code": "def solve(jobs, n_machines, time_limit, release=None, downtime=None): ...",
+  "status": "ok", "practice_gap": 13.857, "practice_spread": 3.646, "delta": -0.161,
+  "per_instance": { "ta41": 15.097, "swv11": 16.94, "...": "..." },
+  "practice_runs": { "ta41": { "runs": [ { "score": 2336, "secs": 1.6027 }, "..." ] }, "...": "..." },
+  "check_gap": 16.035
+}
+```
+
+**MongoDB features doing real work:**
+
+| Feature | Where | What it does |
+|---|---|---|
+| **Change streams** | `engine/api.py` `Hub` | One `events.watch()` (inserts only) pushes every bot action to all connected browsers over server-sent events, with resume tokens. Falls back to polling by `_id` if change streams are unavailable. |
+| **`$graphLookup`** | `engine/store.py` `lineage()` | One query walks `parent_id` back through every ancestor of a strategy. The board's **family tree** tab shows how the winning idea evolved, round by round. |
+| **Aggregation pipeline** | `store.usage_totals()` | `$match` + `$group` totals Luminal calls and tokens per run for the board's counters. |
+| **TTL index** | `presence.last_seen` | Viewers who stop sending heartbeats expire automatically after 5 minutes. |
+| **Compound indexes** | `strategies(run_id, round)`, `events(run_id, _id)`, `rounds(run_id, n)`, `messages(run_id, ts)` | Keep the state, leaderboard and stream queries fast as runs pile up. |
+| **Batched writes** | `loop.py` | One `insert_many` of strategies and one round document per round, which fits Atlas free-tier limits. |
+
+**Collections** (database `botteam`; counts after today's runs):
+
+| Collection | Documents | Holds |
+|---|---|---|
+| `runs` | 15 | each run: team size, settings, baselines, solver line, splits commit, status |
+| `rounds` | 78 | per round: best strategy, check gap, leaderboard, the calendar to draw, playbook snapshot |
+| `strategies` | 302 | every strategy a bot wrote (code, scores, lineage, all test runs) |
+| `events` | 1,295 | the live event log: assignments, proposals, scores, hires and fires, messages |
+| `bots` | 121 | each bot's hire and fire rounds and its assigned angle |
+| `lessons` | 63 | the playbook after every round |
+| `usage` | 409 | every Luminal call: role, tokens in and out, seconds (885k tokens in, 2.3M out today) |
+| `messages`, `presence` | — | human steering messages and who is watching |
+
+The final evaluation also records its result as a `final_result` event, so the proof sits next to the run that produced it.
 
 ## Stack
 
