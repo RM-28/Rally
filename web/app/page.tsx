@@ -289,13 +289,35 @@ export default function Board() {
 
             {state?.showcase && (
               <section className="panel p-4">
-                <div className="flex items-baseline justify-between mb-2">
-                  <h2 className="font-semibold">The team&apos;s best calendar</h2>
-                  <span className="text-xs text-ink-dim num">
-                    {state.showcase.n_machines} people · {state.showcase.n_jobs} projects · {state.showcase.instance_id}
-                  </span>
-                </div>
-                <Calendar showcase={state.showcase} baselineMakespan={(run as { showcase_fcfs?: number }).showcase_fcfs} />
+                {(() => {
+                  const sc = state.showcase!;
+                  const fcfsEnd = (run as { showcase_fcfs?: number }).showcase_fcfs;
+                  const saved = fcfsEnd != null ? fcfsEnd - sc.makespan : null;
+                  return (
+                    <>
+                      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-1">
+                        <h2 className="font-semibold">
+                          {saved != null && saved > 0 ? (
+                            <>
+                              The bots&apos; plan finishes{" "}
+                              <span className="text-good num">{saved.toLocaleString()} hours ({Math.round((100 * saved) / fcfsEnd!)}%) sooner</span> than first come, first served
+                            </>
+                          ) : (
+                            "The team's best calendar"
+                          )}
+                        </h2>
+                        <span className="text-xs text-ink-dim num">
+                          {sc.n_machines} people · {sc.n_jobs} projects · benchmark {sc.instance_id}
+                        </span>
+                      </div>
+                      <p className="text-xs text-ink-dim mb-2">
+                        Each row is a person, each bar a task (colored by project), dark gaps are idle time. The blue line is when the bots&apos; plan finishes; the red
+                        dashed line is when the simple plan would. Hover a bar for details.
+                      </p>
+                      <Calendar showcase={sc} baselineMakespan={fcfsEnd} />
+                    </>
+                  );
+                })()}
               </section>
             )}
           </div>
