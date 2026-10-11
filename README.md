@@ -75,6 +75,32 @@ The check set is scored every round but never shown to the bots and never used t
 
 Main run cost: 102 Luminal calls, ~860k tokens, 26 minutes. 80 of 80 bot proposals passed the safety and validity checks.
 
+### The improvement loop in action (main run)
+
+**Meaningfully different approaches.** The chief of staff must give every bot a *different* change, and at least one idea that is not yet in the playbook. Over 10 rounds the 80 proposals covered:
+
+| Approach family | First tried | Best result | Fate |
+|---|---|---|---|
+| Single priority rules (SPT, LPT, most work remaining) | round 1 | 78–598% | disaster, recorded as AVOID |
+| Multi-start over several priority rules | round 1 (Atlas) | 20.84% | kept as the construction step |
+| Critical-path swap local search | round 1 (Halo) | 22.25% | kept |
+| Hill climbing, iterated local search with kicks | rounds 1–3 | 18.97% | kept, later superseded |
+| Giffler–Thompson active-schedule builders | rounds 2–3 | no gain | AVOID |
+| Critical-block (N5) swaps, insertion moves | rounds 2–3 (Juno) | 18.39% | kept |
+| Simulated annealing | rounds 3–4 (Bishop) | worse than parent | AVOID |
+| **Tabu search over critical-block swaps** | **round 4 (Atlas, after a human message)** | **16.32%** | **became the backbone** |
+| Tabu tuning: adaptive tenure, random tenure, aspiration | rounds 5–8 (Atlas) | **13.86%** | **final strategy** |
+| Restarts and double-bridge kicks on stall | rounds 5–8 | 13.88% | close second |
+| Path relinking, LNS destroy/repair, beam-search seeding | rounds 6–10 | 13.93% | small or no gains |
+| Late acceptance, learned rule weights | rounds 9–10 | worse than parent | AVOID |
+
+**Feedback guiding later rounds.**
+- Every proposal is scored against its parent, and the scribe turns the measured deltas into the playbook. After round 1 it read *"AVOID: SPT (shortest duration) dispatch (+515.01)"*; no bot used a single priority rule again.
+- Parents are always chosen from the current top 3, so wins compound. After tabu search set the record in round 4, 6 of 8 bots in round 6 built on Atlas's tabu strategy.
+- Losers leave the team: the last-ranked bot is fired each round (10 over the run) and replaced by a new bot with a fresh angle from the chief.
+- Humans are part of the loop: a viewer's message after round 3 ("try a proper tabu search…") became Atlas's round-4 assignment, which set the record.
+- The playbook after round 10 has 12 measured lessons, for example *"DO: tabu over critical-block boundary swaps, random 5–15 tenure per accepted swap (−2.07, −1.67)"* and *"AVOID: acceptance rules — decaying temperature/geometric cooling (+0.38, +0.60)…"*.
+
 ### Does the team size matter?
 
 1, 2, 4 and 8 bots, 3 rounds each, 2 seeds each (best practice gap per run):

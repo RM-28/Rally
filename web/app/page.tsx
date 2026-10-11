@@ -71,11 +71,14 @@ export default function Board() {
   const [admin, setAdmin] = useState<string | null>(null);
   const [boardUrl, setBoardUrl] = useState("");
   const refetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const runIdRef = useRef<string | null>(null); // only show live events for the run on screen
 
   const fetchState = useCallback(async () => {
     try {
       const r = await fetch(`${API_URL}/api/state`, { cache: "no-store" });
-      setState(await r.json());
+      const st: State = await r.json();
+      runIdRef.current = st.run?._id ?? null;
+      setState(st);
       setError(null);
     } catch {
       setError("can't reach the engine");
@@ -112,6 +115,11 @@ export default function Board() {
       };
       es.onmessage = (m) => {
         const e: LiveEvent = JSON.parse(m.data);
+        // background experiments (tagged runs) write events too; a new board-started run is picked up via refetch
+        if (e.run_id && runIdRef.current && e.run_id !== runIdRef.current) {
+          if (e.type === "round_started" || e.type === "hired") scheduleRefetch();
+          return;
+        }
         const d = e.data as Record<string, unknown>;
         if (e.bot) {
           setLive((prev) => {
