@@ -1,0 +1,11 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+data/JSPLIB/
+node_modules/
+.next/
+out/
+infra/build/
+*.zip
+data/solver_line_*.json

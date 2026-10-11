@@ -1,0 +1,122 @@
+{
+  "fresh01": {
+    "score": 2100,
+    "status": "FEASIBLE",
+    "secs": 60.0,
+    "solver": "cp-sat"
+  },
+  "fresh02": {
+    "score": 1917,
+    "status": "FEASIBLE",
+    "secs": 60.0,
+    "solver": "cp-sat"
+  },
+  "fresh03": {
+    "score": 2109,
+    "status": "FEASIBLE",
+    "secs": 60.0,
+    "solver": "cp-sat"
+  },
+  "fresh04": {
+    "score": 2066,
+    "status": "FEASIBLE",
+    "secs": 60.0,
+    "solver": "cp-sat"
+  },
+  "fresh05": {
+    "score": 1927,
+    "status": "FEASIBLE",
+    "secs": 60.0,
+    "solver": "cp-sat"
+  },
+  "fresh06": {
+    "score": 2898,
+    "status": "OPTIMAL",
+    "secs": 60.0,
+    "solver": "cp-sat"
+  },
+  "fresh07": {
+    "score": 2851,
+    "status": "OPTIMAL",
+    "secs": 60.0,
+    "solver": "cp-sat"
+  },
+  "fresh08": {
+    "score": 2842,
+    "status": "FEASIBLE",
+    "secs": 60.0,
+    "solver": "cp-sat"
+  },
+  "fresh09": {
+    "score": 3033,
+    "status": "FEASIBLE",
+    "secs": 60.0,
+    "solver": "cp-sat"
+  },
+  "fresh10": {
+    "score": 2968,
+    "status": "FEASIBLE",
+    "secs": 60.0,
+    "solver": "cp-sat"
+  },
+  "event01": {
+    "score": 2263,
+    "status": "FEASIBLE",
+    "secs": 60.0,
+    "solver": "cp-sat"
+  },
+  "event02": {
+    "score": 1970,
+    "status": "FEASIBLE",
+    "secs": 60.0,
+    "solver": "cp-sat"
+  },
+  "event03": {
+    "score": 2097,
+    "status": "FEASIBLE",
+    "secs": 60.0,
+    "solver": "cp-sat"
+  },
+  "event04": {
+    "score": 2082,
+    "status": "FEASIBLE",
+    "secs": 60.0,
+    "solver": "cp-sat"
+  },
+  "event05": {
+    "score": 2008,
+    "status": "OPTIMAL",
+    "secs": 60.0,
+    "solver": "cp-sat"
+  },
+  "event06": {
+    "score": 3135,
+    "status": "OPTIMAL",
+    "secs": 60.0,
+    "solver": "cp-sat"
+  },
+  "event07": {
+    "score": 3084,
+    "status": "OPTIMAL",
+    "secs": 60.0,
+    "solver": "cp-sat"
+  },
+  "event08": {
+    "score": 2880,
+    "status": "FEASIBLE",
+    "secs": 60.0,
+    "solver": "cp-sat"
+  },
+  "event09": {
+    "score": 3009,
+    "status": "OPTIMAL",
+    "secs": 60.0,
+    "solver": "cp-sat"
+  },
+  "event10": {
+    "score": 3028,
+    "status": "OPTIMAL",
+    "secs": 60.0,
+    "solver": "cp-sat"
+  }
+}

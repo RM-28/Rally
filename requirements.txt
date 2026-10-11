@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+openai
+pymongo[srv]>=4.9
+python-dotenv
+ortools
+boto3
+sse-starlette

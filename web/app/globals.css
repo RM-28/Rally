@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+:root {
+  --navy-950: #050b18;
+  --navy-900: #0a1428;
+  --navy-800: #101e3a;
+  --navy-700: #1a2b4f;
+  --navy-600: #2a3d66;
+  --ink: #e6edf7;
+  --ink-dim: #8fa1c0;
+  --blue: #2f8cff;
+  --blue-soft: #2f8cff33;
+  --green: #3ddc97;
+  --amber: #ffb547;
+  --red: #ff5d6c;
+}
+
+@theme inline {
+  --color-navy-950: var(--navy-950);
+  --color-navy-900: var(--navy-900);
+  --color-navy-800: var(--navy-800);
+  --color-navy-700: var(--navy-700);
+  --color-navy-600: var(--navy-600);
+  --color-ink: var(--ink);
+  --color-ink-dim: var(--ink-dim);
+  --color-blue: var(--blue);
+  --color-good: var(--green);
+  --color-warn: var(--amber);
+  --color-bad: var(--red);
+  --font-sans: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
+}
+
+html,
+body {
+  background: var(--navy-950);
+  color: var(--ink);
+}
+
+body {
+  font-family: var(--font-plex-sans), system-ui, sans-serif;
+}
+
+.panel {
+  background: var(--navy-900);
+  border: 1px solid var(--navy-700);
+  border-radius: 12px;
+}
+
+.num {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes slide-in {
+  from { transform: translateY(12px) scale(0.97); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.slide-in { animation: slide-in 0.5s ease-out; }
+
+@keyframes pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 0 var(--blue-soft); }
+  50% { box-shadow: 0 0 0 6px var(--blue-soft); }
+}
+.thinking { animation: pulse-ring 1.6s ease-in-out infinite; }
