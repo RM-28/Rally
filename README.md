@@ -4,6 +4,40 @@ A team of AI bots that works on a hard optimization problem in parallel, gets me
 
 Built at c0mpiled-15 (Penn State, Oct 11 2026) for Track 1A. Every bot runs on **DeepSeek-V4.1-Flash hosted on Luminal Cloud**.
 
+## How the scheduling works
+
+**The problem.** A team has several **people** and several **projects**. Each project is a fixed sequence of **tasks**, and each task needs one specific person for a set number of hours. A person can work on one task at a time, and a project's tasks must happen in order. The goal is to finish everything as early as possible (the *makespan*). This is the classic **job-shop scheduling** problem: in the benchmark literature people are called *machines* and projects are called *jobs*.
+
+**A tiny example.** Three people (Ana, Ben, Cai) and three projects:
+
+| Project | Task 1 | Task 2 | Task 3 |
+|---|---|---|---|
+| A | Ben 5h | Cai 1h | Ana 3h |
+| B | Ana 1h | Cai 3h | Ben 1h |
+| C | Ana 1h | Cai 4h | Ben 5h |
+
+The only real decision is **the order in which each person works through their tasks**. First come, first served (everyone handles tasks in the order the projects are listed) finishes at **hour 18**. A better order finishes at **hour 11**, with the same work and the same people:
+
+```
+First come, first served: done at hour 18     Better order: done at hour 11
+(one character = one hour, . = idle)
+
+hour 0  3  6  9  12 15 18                     hour 0  3  6  9
+Ana  BC....AAA.........                       Ana  CB....AAA..
+Ben  AAAAA....B...CCCCC                       Ben  AAAAACCCCCB
+Cai  .....ABBBCCCC.....                       Cai  .CCCCABBB..
+```
+
+The difference: Cai starts project C at hour 1 instead of sitting idle until A arrives at hour 5. That lets Ben start C's final 5 hours at hour 5 instead of hour 13. With 3 people and 3 projects you can check every order by hand. With **20 people and 50 projects** (our benchmark sizes) the number of possible orders is astronomically large: the problem is NP-hard, and no known method finds the best one quickly.
+
+**What a bot writes.** A strategy is a Python function `solve(jobs, n_machines, time_limit, release, downtime)` that returns a **priority list of project ids**: the *k*-th time project *j* appears means "schedule project *j*'s *k*-th task next". A fixed **decoder** (`engine/jobs/jobshop/decoder.py`) turns that list into a calendar: each task starts as soon as both its person and its project's previous task are free (and outside any downtime window). The decoder's finish time is the score. A strategy can never report its own score.
+
+**How good is good?** Each benchmark instance has a **reference schedule**: the best known in the research literature, or for our freshly generated instances a 60-second run of Google's CP-SAT solver. The **gap** is how much later a strategy finishes than the reference: a 10% gap means the calendar ends 10% later than the reference does.
+
+**What the bots discovered.** Starting from simple dispatch rules, the team worked its way up the classic toolbox over the rounds: trying several priority rules and keeping the best, then hill-climbing by swapping tasks on the **critical path** (the chain of back-to-back tasks that sets the finish time), then **tabu search** (keep swapping, even through worse schedules, while remembering recent moves so it doesn't undo them), and finally tuning the tabu memory. That is the textbook route to a strong job-shop solver, found and tuned by the bots in 2-second strategies.
+
+**Surprise events.** The `events` test adds a person being out for a window of time (`downtime`) and a rush project that can't start until later (`release`). No textbook algorithm targets this exact variant, and the bots never trained on it.
+
 ## Results
 
 The job: **job-shop scheduling** (people × projects × ordered tasks; minimise the finish time). It is NP-hard, and we used the largest standard benchmark instances. Each strategy gets **2 seconds per instance on 1 CPU thread**.
