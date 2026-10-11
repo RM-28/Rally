@@ -3,7 +3,6 @@
 import { QRCodeSVG } from "qrcode.react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import BotGrid, { type LiveBot } from "@/components/BotGrid";
-import Calendar from "@/components/Calendar";
 import SchedulePanel from "@/components/SchedulePanel";
 import ScoreChart from "@/components/ScoreChart";
 import StrategyModal from "@/components/StrategyModal";
@@ -49,6 +48,8 @@ function describe(e: LiveEvent): string | null {
       return "Run paused";
     case "resumed":
       return "Run resumed";
+    case "team_scheduled":
+      return `A new team calendar was scheduled: ${d.hours_saved} h sooner than first come, first served`;
     case "final_result":
       return "Final result recorded";
     default:
@@ -72,6 +73,7 @@ export default function Board() {
   const [boardUrl, setBoardUrl] = useState("");
   const refetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const runIdRef = useRef<string | null>(null); // only show live events for the run on screen
+  const [teamKey, setTeamKey] = useState(0); // bumps when anyone schedules a new team
 
   const fetchState = useCallback(async () => {
     try {
@@ -141,6 +143,7 @@ export default function Board() {
           });
         }
         if (e.type === "round_started") setLive({});
+        if (e.type === "team_scheduled") setTeamKey((k) => k + 1);
         const text = describe(e);
         if (text) setActivity((a) => [{ id: e._id, text, ts: e.ts }, ...a].slice(0, 40));
         if (["round_finished", "hired", "fired", "lesson", "human_message", "scored", "round_started", "paused", "resumed"].includes(e.type)) scheduleRefetch();
@@ -287,39 +290,7 @@ export default function Board() {
               <ScoreChart curve={curve} baseline={fcfs?.practice} strongBaseline={state?.baselines?.simple_rule?.practice} solver={state?.solver?.practice} solverSecs={state?.solver?.secs} />
             </section>
 
-            {state?.showcase && (
-              <section className="panel p-4">
-                {(() => {
-                  const sc = state.showcase!;
-                  const fcfsEnd = (run as { showcase_fcfs?: number }).showcase_fcfs;
-                  const saved = fcfsEnd != null ? fcfsEnd - sc.makespan : null;
-                  return (
-                    <>
-                      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-1">
-                        <h2 className="font-semibold">
-                          {saved != null && saved > 0 ? (
-                            <>
-                              The bots&apos; plan finishes{" "}
-                              <span className="text-good num">{saved.toLocaleString()} hours ({Math.round((100 * saved) / fcfsEnd!)}%) sooner</span> than first come, first served
-                            </>
-                          ) : (
-                            "The team's best calendar"
-                          )}
-                        </h2>
-                        <span className="text-xs text-ink-dim num">
-                          {sc.n_machines} people · {sc.n_jobs} projects · benchmark {sc.instance_id}
-                        </span>
-                      </div>
-                      <p className="text-xs text-ink-dim mb-2">
-                        Each row is a person, each bar a task (colored by project), dark gaps are idle time. The blue line is when the bots&apos; plan finishes; the red
-                        dashed line is when the simple plan would. Hover a bar for details.
-                      </p>
-                      <Calendar showcase={sc} baselineMakespan={fcfsEnd} />
-                    </>
-                  );
-                })()}
-              </section>
-            )}
+            <SchedulePanel refreshKey={teamKey} />
           </div>
 
           <aside className="flex flex-col gap-4 min-w-0">
@@ -398,8 +369,6 @@ export default function Board() {
           </aside>
         </div>
       )}
-
-      <SchedulePanel />
 
       {open && <StrategyModal id={open} onClose={() => setOpen(null)} />}
     </main>

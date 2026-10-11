@@ -40,6 +40,7 @@ def ensure_indexes() -> None:
     d.rounds.create_index([("run_id", ASCENDING), ("n", ASCENDING)])
     d.messages.create_index([("run_id", ASCENDING), ("ts", ASCENDING)])
     d.usage.create_index([("run_id", ASCENDING)])
+    d.team_schedules.create_index([("ts", ASCENDING)])
     # viewers who stop sending heartbeats disappear on their own (TTL index)
     d.presence.create_index([("last_seen", ASCENDING)], expireAfterSeconds=300)
 

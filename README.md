@@ -208,7 +208,7 @@ cd web && npm install && npm run dev                 # board on http://localhost
 
 Open `http://localhost:3000/?admin=<ADMIN_TOKEN>` for the start / pause / stop buttons; plain `http://localhost:3000` for viewers.
 
-**Schedule your team.** The board's "Schedule your team" panel (API: `POST /api/schedule`) takes your own people, projects and tasks (plus optional time off and late starts), runs the bot team's frozen best strategy on them in the same sandbox, and shows its calendar next to first come, first served. It never tunes anything, so the final results stay valid. On a 600-task team (20 people, 30 projects) it finishes 20% sooner, in under 4 seconds.
+**Your team's calendar.** The board's main calendar is a real one: your own people and projects on working days (9:00–17:00, weekdays), starting the next working morning. Edit the team (plus optional time off and late starts) and the bot team's frozen best strategy schedules it in the same sandbox (API: `POST /api/schedule`), next to first come, first served. Every schedule is saved in MongoDB and pushed to every viewer by the change stream, so all screens show the same calendar. It never tunes anything, so the final results stay valid. On a 600-task team (20 people, 30 projects) it finishes 20% sooner, in under 4 seconds.
 
 Other scripts:
 

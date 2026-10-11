@@ -396,13 +396,38 @@ async def schedule_team(body: ScheduleIn):
     kept_simple = b > f  # the strategy is a heuristic; never hand the user a worse plan than the simple one
     if kept_simple:
         out["bot"], b = out["fcfs"], f
-    return {
+    doc = {
+        "ts": store.now(), "start": next_workday_start(), "hours_per_day": HOURS_PER_DAY,
+        "input": body.model_dump(),
         "people": people, "projects": projects,
         "fcfs": out["fcfs"], "bot": out["bot"],
         "hours_saved": f - b, "pct_shorter": round(100 * (f - b) / f, 1) if f else 0.0,
         "kept_simple": kept_simple,
         "strategy": {"id": best["id"], "bot": best["bot"]},
     }
+    # shared: every board shows the latest team calendar (pushed to them by the change stream)
+    await aw(store.db().team_schedules.insert_one, doc)
+    await aw(store.emit, "team_scheduled", None, {"hours_saved": f - b, "people": len(people),
+                                                   "projects": len(projects)}, None)
+    return clean(doc)
+
+
+@app.get("/api/team-schedule")
+async def latest_team_schedule():
+    doc = await aw(lambda: store.db().team_schedules.find_one(sort=[("ts", -1)]))
+    return clean(doc) if doc else None
+
+
+HOURS_PER_DAY = 8  # working hours per day; the calendar runs 9:00-17:00 on weekdays
+
+
+def next_workday_start() -> str:
+    """The next weekday morning at 9:00 (local time of the server), as ISO; the plan's hour 0."""
+    now = dt.datetime.now().astimezone()
+    d = now + dt.timedelta(days=1)
+    while d.weekday() >= 5:
+        d += dt.timedelta(days=1)
+    return d.replace(hour=9, minute=0, second=0, microsecond=0).isoformat()
 
 
 # ---------- fallback: serve the static board export from the same origin ----------
