@@ -4,8 +4,10 @@ from pathlib import Path
 
 from engine.jobs.jobshop import instances
 from engine.jobs.jobshop.decoder import decode, normalize_downtime
+from engine.jobs.jobshop.generate import with_events
 
 HERE = Path(__file__).resolve().parent
+SURPRISE_SEED = 4242
 
 
 class JobShop:
@@ -44,6 +46,11 @@ class JobShop:
     def reference(self, instance_id: str) -> float:
         return instances.reference(instance_id)
 
+    def surprise(self, instance: dict) -> dict:
+        """The showcase instance with a downtime window and a late job, for the board's events toggle.
+        Built from a practice instance with the same recipe as the events set; never scored."""
+        return with_events(instance, SURPRISE_SEED, f"{instance['id']}+events")
+
     def showcase(self, instance: dict, output) -> dict:
         ms, ops = decode(instance["jobs"], instance["n_machines"], output,
                          instance.get("release"), instance.get("downtime"))
@@ -56,4 +63,5 @@ class JobShop:
             "n_jobs": len(instance["jobs"]), "n_machines": instance["n_machines"],
             "rows": rows,  # rows[machine] = [[job, step, start, end], ...]
             "downtime": {str(m): ws for m, ws in dt.items()},
+            "event": instance.get("event"),
         }

@@ -6,3 +6,4 @@ python-dotenv
 ortools
 boto3
 sse-starlette
+tzdata                 # zoneinfo data on Windows (Rally routines)

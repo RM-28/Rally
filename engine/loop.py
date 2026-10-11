@@ -64,6 +64,7 @@ class RunLoop:
         self.last_msg_ts = None
         self.tests_run = 0
         self.showcase = None
+        self.showcase_events = None   # same instance with a downtime window and a late job
         self.round_n = 0
         self.resume_evt = asyncio.Event()
         self.resume_evt.set()
@@ -118,17 +119,26 @@ class RunLoop:
         s = summarize(self.job, res["x"])
         return s["gap"]
 
-    async def make_showcase(self, code: str):
+    async def make_showcase(self, code: str, events: bool = False):
         inst = self.job.load(self.showcase_id)
+        fallback = self.showcase
+        if events:
+            if not hasattr(self.job, "surprise"):
+                return None
+            inst, fallback = self.job.surprise(inst), self.showcase_events
         res = await aw(run_child, code, self.job.entrypoint, self.job.call_args(inst, self.time_limit), self.time_limit)
         if "error" in res:
             self.log(f"showcase failed: {res['error']}")
-            return self.showcase
+            return fallback
         try:
             return self.job.showcase(inst, res["output"])
         except ValueError as exc:
             self.log(f"showcase invalid: {exc}")
-            return self.showcase
+            return fallback
+
+    async def make_showcases(self, code: str):
+        self.showcase, self.showcase_events = await asyncio.gather(
+            self.make_showcase(code), self.make_showcase(code, events=True))
 
     def solver_line(self) -> dict:
         """CP-SAT with the same per-instance time as a bot, on practice and check. Cached on disk."""
@@ -211,14 +221,20 @@ class RunLoop:
             d["practice_runs"] = res[name]
         baselines = {d["note"].split(": ", 1)[1]: {"practice": d["practice_gap"], "check": d["check_gap"]} for d in docs}
         solver = await aw(self.solver_line)
-        fcfs_show = await self.make_showcase(bases["fcfs"]) if "fcfs" in bases else None
+        fcfs_show, fcfs_events = (None, None)
+        if "fcfs" in bases:
+            fcfs_show, fcfs_events = await asyncio.gather(self.make_showcase(bases["fcfs"]),
+                                                          self.make_showcase(bases["fcfs"], events=True))
         await aw(store.db().runs.update_one, {"_id": self.run_id}, {"$set": {
             "baselines": baselines, "solver": solver,
-            "showcase_fcfs": fcfs_show and fcfs_show["makespan"]}})
+            "showcase_fcfs": fcfs_show and fcfs_show["makespan"],
+            "showcase_events_fcfs": fcfs_events and fcfs_events["makespan"],
+            # full plans so the board can switch the calendar to first come, first served
+            "showcase_fcfs_plan": fcfs_show, "showcase_events_fcfs_plan": fcfs_events}})
 
         best = self.leaderboard(1)[0]
         self.best_id = best["_id"]
-        self.showcase = await self.make_showcase(best["code"])
+        await self.make_showcases(best["code"])
         await aw(store.db().strategies.insert_many, docs)
         await self.write_round(0, best, best["check_gap"], started, [])
         for _ in range(self.n_bots):
@@ -274,7 +290,7 @@ class RunLoop:
         best_bot = self.strategies[self.best_id]["bot"]
         ranked = [p["bot"] for p in scored] + [p["bot"] for p in proposals if p["status"] != "ok"]
         victim = next((b for b in reversed(ranked) if b != best_bot), None)
-        if victim and len(ranked) > 1:
+        if victim and len(ranked) > 1 and n < self.rounds:   # nobody is fired or hired after the last round
             await self.fire(victim, "ranked last this round")
             await self.hire(self.hire_angle)
 
@@ -283,7 +299,7 @@ class RunLoop:
 
         # 9. showcase of the best-ever strategy (redrawn when it improves)
         if self.best_id != prev_best:
-            self.showcase = await self.make_showcase(self.strategies[self.best_id]["code"])
+            await self.make_showcases(self.strategies[self.best_id]["code"])
 
         # 10. write strategies + round doc
         await aw(store.db().strategies.insert_many, proposals)
@@ -303,7 +319,7 @@ class RunLoop:
             "best_ever_id": best["_id"], "best_ever_practice_gap": best["practice_gap"],
             "best_ever_check_gap": best.get("check_gap"),
             "leaderboard": [self._lb_row(s) for s in self.leaderboard()],
-            "showcase": self.showcase, "playbook": self.playbook, "tests_run": self.tests_run,
+            "showcase": self.showcase, "showcase_events": self.showcase_events, "playbook": self.playbook, "tests_run": self.tests_run,
             "bots": [b["name"] for b in self.bots],
             "started_at": started, "finished_at": store.now(),
         }
@@ -333,8 +349,9 @@ class RunLoop:
             parent = a.get("parent") if a.get("parent") in top3 else top_ids[i % len(top_ids)]
             change = (a.get("change") or "").strip() or (
                 f"Follow your angle: {b['angle']}" if b.get("angle") else FALLBACK_CHANGE)
-            out.append({"bot": b["name"], "parent": parent, "change": change[:500]})
-            await self.emit("assignment", b["name"], parent=parent, change=change[:500])
+            msg = self.steering_message(human, b["name"], a.get("from_human"))
+            out.append({"bot": b["name"], "parent": parent, "change": change[:500], "human_message": msg})
+            await self.emit("assignment", b["name"], parent=parent, change=change[:500], human_message=msg)
         self.hire_angle = (reply.get("hire_angle") or "").strip()[:300]
         r = (reply.get("reply_to_humans") or "").strip()
         if r:
@@ -343,12 +360,21 @@ class RunLoop:
             await self.emit("human_message", None, name="Chief of staff", text=r[:500])
         return out
 
+    @staticmethod
+    def steering_message(human: list[dict], bot: str, from_human) -> dict | None:
+        """The human message an assignment carries out: the one the chief named, else one aimed at this bot."""
+        named = str(from_human or "").strip().lower()
+        hit = next((m for m in reversed(human) if named and m["name"].strip().lower() == named), None)
+        hit = hit or next((m for m in reversed(human) if m.get("bot") == bot), None)
+        return hit and {"name": hit["name"], "text": hit["text"][:500]}
+
     async def propose(self, n: int, a: dict) -> dict:
         bot, parent = a["bot"], self.strategies[a["parent"]]
         sid = f"{self.run_id}-r{n}-{bot}"
         doc = {"_id": sid, "run_id": self.run_id, "round": n, "bot": bot, "parent_id": parent["_id"],
                "change": a["change"], "code": None, "note": "", "status": "rejected", "practice_gap": None,
-               "practice_spread": None, "per_instance": None, "delta": None, "check_gap": None, "error": None}
+               "practice_spread": None, "per_instance": None, "delta": None, "check_gap": None, "error": None,
+               "human_message": a.get("human_message")}
         error, code = None, None
         for attempt in range(2):
             try:

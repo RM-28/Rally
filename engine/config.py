@@ -13,7 +13,7 @@ DATA = ROOT / "data"
 if load_dotenv:
     load_dotenv(ROOT / ".env")
 
-APP_NAME = "Bot Team"
+APP_NAME = "Rally"
 
 
 def _env(name: str, default: str = "") -> str:
@@ -35,6 +35,7 @@ N_BOTS = int(_env("N_BOTS", "4"))
 WEB_ORIGIN = _env("WEB_ORIGIN", "http://localhost:3000")
 ADMIN_TOKEN = _env("ADMIN_TOKEN")
 MODEL_MOCK = _env("MODEL_MOCK", "0") == "1"   # offline wiring tests only
+RALLY_TZ = _env("RALLY_TZ", "America/Los_Angeles")   # studio time for Rally routines and prompts
 
 ROSTER = [
     "Atlas", "Bishop", "Cleo", "Dash", "Echo", "Fig", "Gus", "Halo",

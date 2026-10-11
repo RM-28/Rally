@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import re
 import time
 from collections import deque
@@ -66,6 +67,26 @@ def _mock_reply(messages, role) -> str:
         blocks = _FENCE.findall(user.split("PARENT STRATEGY:", 1)[-1])
         parent = blocks[0] if blocks else ""
         return f"```python\n{parent}\n```\nNOTE: mock copy of parent"
+    if role == "rally_agent":
+        import datetime as _dt
+        ask = user.rsplit("---", 1)[-1].strip()
+        low = ask.lower()
+        reply = {"reply": f"(MODEL_MOCK) Got it. With a real model I would work on: {ask[:160]}", "task_title": "Mock task"}
+        if any(w in low for w in ("meeting", "book", "schedule", "block", "kickoff", "calendar")):
+            day = _dt.date.today() + _dt.timedelta(days=1)
+            reply["event"] = {"title": "Mock meeting", "start": f"{day.isoformat()}T14:00", "minutes": 30, "notes": "Mock agenda",
+                              "guests": ["guest@example.com"] if "guest" in low or "@example" in low else [], "why": "MODEL_MOCK test"}
+        if "task" in low or "board" in low:
+            reply["tasks"] = [{"title": "Mock task one", "due": "Fri"}, {"title": "Mock task two", "due": "Mon"}]
+        if "draft" in low or "write" in low:
+            reply["doc"] = {"title": "Mock draft", "body": "First paragraph.\n\nSecond paragraph."}
+        if "remember" in low:
+            reply["memory"] = "Mock preference to remember"
+        if "hand" in low and "quill" in low and "handed you" not in low:
+            reply["handoff"] = {"to": "quill", "text": "the mock notes", "ask": "Turn the notes into a short draft"}
+        return json.dumps(reply)
+    if role == "rally_catchup":
+        return '{"points": ["(MODEL_MOCK) A summary point.", "Another point."]}'
     return "pong"
 
 

@@ -15,12 +15,15 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
-from engine import config, store
+from engine import board, config, store
 from engine.loop import RunLoop
+from engine.rally import cron as rally_cron
+from engine.rally import db as rally_db
+from engine.rally import routes as rally_routes
 
 app = FastAPI(title=config.APP_NAME)
 app.add_middleware(CORSMiddleware, allow_origins=[o.strip() for o in config.WEB_ORIGIN.split(",")],
-                   allow_methods=["GET", "POST"], allow_headers=["*"])
+                   allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"], allow_headers=["*"])
 
 ACTIVE: dict = {"loop": None, "task": None}
 PRESENT_SECS = 30
@@ -60,6 +63,8 @@ def build_state(run_id: str | None) -> dict:
     if not run:
         return {"app_name": config.APP_NAME, "run": None, "people": people}
     rid = run["_id"]
+    if run.get("showcase_fcfs") is not None and "showcase_fcfs_plan" not in run:
+        run = board.backfill_fcfs_plans(run)
     rounds = list(d.rounds.find({"run_id": rid}, {"leaderboard": 0, "showcase": 0}).sort("n", 1))
     latest = d.rounds.find_one({"run_id": rid}, sort=[("n", -1)])
     strategies = list(d.strategies.find({"run_id": rid}, {"code": 0, "practice_runs": 0}).sort("round", 1))
@@ -73,8 +78,22 @@ def build_state(run_id: str | None) -> dict:
             "history": [{"round": s["round"], "gap": s.get("practice_gap")} for s in mine],
             "latest": last and {"id": last["_id"], "round": last["round"], "gap": last.get("practice_gap"),
                                 "change": last.get("change"), "note": last.get("note"), "status": last["status"],
-                                "delta": last.get("delta"), "error": last.get("error")},
+                                "delta": last.get("delta"), "error": last.get("error"),
+                                "per_instance": last.get("per_instance"), "spread": last.get("practice_spread"),
+                                "check_gap": last.get("check_gap"), "parent_id": last.get("parent_id")},
         })
+    # this round's proposals, every bot (the leaderboard card), and how the record moved (chart annotation)
+    last_n = latest["n"] if latest else 0
+    round_results = [{"id": s["_id"], "bot": s["bot"], "change": s.get("change"), "practice_gap": s.get("practice_gap"),
+                      "delta": s.get("delta"), "status": s["status"], "error": s.get("error")}
+                     for s in strategies if s["round"] == last_n and last_n > 0]
+    by_id = {s["_id"]: s for s in strategies}
+    steered, prev = {}, None
+    for r in rounds:
+        if r.get("best_ever_id") != prev and (hm := (by_id.get(r.get("best_ever_id")) or {}).get("human_message")):
+            steered[r["n"]] = hm
+        prev = r.get("best_ever_id")
+    proposals = [s for s in strategies if s["round"] >= 1]
     msgs = list(d.messages.find({"run_id": rid}).sort("ts", -1).limit(50))[::-1]
     loop = ACTIVE["loop"]
     return clean({
@@ -84,10 +103,14 @@ def build_state(run_id: str | None) -> dict:
                                                          "best_ever_practice_gap", "best_ever_check_gap",
                                                          "leaderboard", "tests_run", "finished_at")},
         "curve": [{"n": r["n"], "practice": r.get("best_practice_gap"), "check": r.get("check_gap"),
-                   "best_ever": r.get("best_ever_practice_gap"), "best_ever_check": r.get("best_ever_check_gap")}
+                   "best_ever": r.get("best_ever_practice_gap"), "best_ever_check": r.get("best_ever_check_gap"),
+                   "steered_by": steered.get(r["n"])}
                   for r in rounds],
+        "round_results": round_results,
+        "proposals": {"ok": sum(1 for s in proposals if s["status"] == "ok"), "total": len(proposals)},
         "baselines": run.get("baselines", {}), "solver": run.get("solver", {}),
         "showcase": latest and latest.get("showcase"),
+        "showcase_events": latest and latest.get("showcase_events"),
         "playbook": (latest or {}).get("playbook", []),
         "bots": bots,
         "usage": store.usage_totals(rid),
@@ -121,7 +144,66 @@ async def strategy(sid: str):
 
 @app.get("/api/lineage/{sid}")
 async def lineage(sid: str):
-    return clean(await aw(store.lineage, sid))
+    """Root first: the strategy, every ancestor, and the side branches built on each one."""
+    nodes = await aw(store.lineage_tree, sid)
+    if not nodes:
+        raise HTTPException(404)
+    return clean(nodes)
+
+
+@app.get("/api/results")
+async def results():
+    return clean(await aw(board.results))
+
+
+# ---------- schedule your team: the frozen best strategy on a visitor's calendar ----------
+
+class TaskIn(BaseModel):
+    person: int = Field(ge=0)
+    hours: int = Field(ge=1, le=999)
+
+
+class ProjectIn(BaseModel):
+    name: str = Field(default="", max_length=40)
+    tasks: list[TaskIn] = Field(max_length=30)
+
+
+class TimeOffIn(BaseModel):
+    person: int = Field(ge=0)
+    from_: int = Field(alias="from", ge=0, le=99_999)
+    to: int = Field(ge=0, le=99_999)
+
+
+class LateStartIn(BaseModel):
+    project: int = Field(ge=0)
+    hour: int = Field(ge=0, le=99_999)
+
+
+class ScheduleIn(BaseModel):
+    people: list[str] = Field(min_length=1, max_length=30)
+    projects: list[ProjectIn] = Field(min_length=1, max_length=26)
+    time_off: list[TimeOffIn] = Field(default_factory=list, max_length=60)
+    late_starts: list[LateStartIn] = Field(default_factory=list, max_length=26)
+
+
+@app.post("/api/schedule")
+async def post_schedule(body: ScheduleIn):
+    n_p, n_j = len(body.people), len(body.projects)
+    projects = [[(t.person, t.hours) for t in p.tasks] for p in body.projects]
+    if any(not p for p in projects):
+        raise HTTPException(400, "Every project needs at least one task.")
+    if any(m >= n_p for p in projects for m, _ in p):
+        raise HTTPException(400, "A task is assigned to someone who is not on the team.")
+    if any(o.person >= n_p or o.to <= o.from_ for o in body.time_off):
+        raise HTTPException(400, "Time off needs a person on the team and an end hour after the start hour.")
+    if any(ls.project >= n_j for ls in body.late_starts):
+        raise HTTPException(400, "A late start points at a project that does not exist.")
+    inst = board.build_instance(n_p, projects, [(o.person, o.from_, o.to) for o in body.time_off],
+                                [(ls.project, ls.hour) for ls in body.late_starts])
+    try:
+        return clean(await board.schedule(inst))
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
 
 
 # ---------- live stream: one poller fans out to every client ----------
@@ -268,6 +350,18 @@ async def run_stop(x_admin_token: str | None = Header(default=None)):
         loop.stop_requested = True
         loop.resume_evt.set()
     return {"ok": True}
+
+
+# ---------- Rally (must be mounted before the catch-all below) ----------
+
+app.include_router(rally_routes.router)
+
+
+@app.on_event("startup")
+async def rally_startup():
+    # the test workspace is seeded on the first /api/rally/bootstrap, in that browser's time zone
+    rally_db.BUS.bind(asyncio.get_running_loop())
+    asyncio.create_task(rally_cron.scheduler())
 
 
 # ---------- fallback: serve the static board export from the same origin ----------

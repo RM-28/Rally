@@ -4,7 +4,11 @@ export type CurvePoint = {
   check: number | null;
   best_ever: number | null;
   best_ever_check: number | null;
+  /** set when this round's new record came from an assignment that carried out a human message */
+  steered_by?: HumanMessage | null;
 };
+
+export type HumanMessage = { name: string; text: string };
 
 export type BotInfo = {
   name: string;
@@ -22,6 +26,10 @@ export type BotInfo = {
     status: "ok" | "rejected";
     delta?: number | null;
     error?: string | null;
+    per_instance?: Record<string, number | null> | null;
+    spread?: number | null;
+    check_gap?: number | null;
+    parent_id?: string | null;
   } | null;
 };
 
@@ -32,6 +40,8 @@ export type Showcase = {
   n_machines: number;
   rows: [number, number, number, number][][]; // rows[machine] = [job, step, start, end][]
   downtime: Record<string, [number, number][]>;
+  // only on the "with surprises" calendar
+  event?: { busiest_machine: number; window: [number, number]; late_job: number; release: number } | null;
 };
 
 export type Message = { _id: string; ts: string; name: string; text: string; bot?: string | null };
@@ -49,6 +59,12 @@ export type State = {
     paused?: boolean;
     time_limit?: number;
     repeats?: number;
+    showcase_fcfs?: number | null;
+    showcase_events_fcfs?: number | null;
+    showcase_fcfs_plan?: Showcase | null;
+    showcase_events_fcfs_plan?: Showcase | null;
+    started_at?: string;
+    finished_at?: string | null;
   };
   round?: null | {
     n: number;
@@ -62,15 +78,21 @@ export type State = {
   };
   curve?: CurvePoint[];
   baselines?: Record<string, { practice: number; check: number }>;
-  solver?: { practice?: number; check?: number; secs?: number };
+  solver?: { practice?: number; check?: number; secs?: number; workers?: number };
   showcase?: Showcase | null;
+  showcase_events?: Showcase | null;
   playbook?: string[];
   bots?: BotInfo[];
   usage?: { calls: number; tokens_in: number; tokens_out: number };
   tests_run?: number;
   messages?: Message[];
   people: string[];
+  /** every proposal of the latest finished round, for the leaderboard card */
+  round_results?: RoundResult[];
+  proposals?: { ok: number; total: number };
 };
+
+export type RoundResult = { id: string; bot: string; change?: string | null; practice_gap: number | null; delta?: number | null; status: "ok" | "rejected"; error?: string | null };
 
 export type LiveEvent = {
   _id: string;
@@ -95,4 +117,54 @@ export type StrategyDoc = {
   delta?: number | null;
   error?: string | null;
   status: string;
+  practice_spread?: number | null;
+  per_instance?: Record<string, number | null> | null;
+  human_message?: HumanMessage | null;
+};
+
+/** GET /api/lineage/{sid}: root first. siblings = other ideas built on that node that did not become the next step. */
+export type LineageNode = {
+  id: string;
+  round: number;
+  bot: string;
+  change: string;
+  note: string;
+  practice_gap: number | null;
+  check_gap: number | null;
+  delta: number | null;
+  human_message?: HumanMessage | null;
+  siblings: { id: string; round: number; bot: string; change: string; practice_gap: number | null; verdict: "AVOID" | "Kept" | "No gain" | "Round best" | "Sat out" }[];
+  more: number;
+};
+
+/** GET /api/results: read from data/*.json and the main run, never recomputed. */
+export type Results = {
+  final: { set: "held_out" | "fresh" | "events"; label: string; detail: string; baseline_gap: number; team_gap: number; shorter_pct: number; gap_closed_pct: number | null; gap_closed_vs_fcfs_pct: number | null }[];
+  final_eval_ts: string | null;
+  splits_commit: string | null;
+  strategy_id: string | null;
+  time_limit: number;
+  repeats: number;
+  main_run: { id: string; n_bots: number; rounds: number; calls: number; tokens: number; minutes: number | null; proposals_ok: number; proposals_total: number } | null;
+  rounds: { n: number; practice: number | null; check: number | null; set_by: string; human_message?: HumanMessage | null }[];
+  head_to_head: { bots: number; rounds: number; at5?: number | null; at10?: number | null; at15?: number | null; check15?: number | null; tokens: number }[];
+  team_size: { bots: number; practice_mean: number; lo: number; hi: number; check_mean: number | null; runs: number }[];
+  approaches: { family: string; first_tried: string; best: string; fate: string }[];
+};
+
+/** POST /api/schedule: runs the frozen best strategy, never tunes. */
+export type ScheduleRequest = {
+  people: string[];
+  projects: { name: string; tasks: { person: number; hours: number }[] }[];
+  time_off: { person: number; from: number; to: number }[];
+  late_starts: { project: number; hour: number }[];
+};
+export type Plan = { makespan: number; rows: [number, number, number, number][][] };
+export type ScheduleResponse = {
+  fcfs: Plan;
+  team: Plan;
+  fallback: boolean;
+  error: string | null;
+  strategy: { id: string | null; bot: string; round: number; final: boolean };
+  secs: number;
 };

@@ -23,6 +23,26 @@ Then set `RUNNER=lambda` and compare: `python -m engine.scripts.baseline --runne
 
 ## Engine + API on EC2 (Phase 8)
 
+Quick path (about 15 minutes):
+
+1. EC2 console, Launch instance: Ubuntu 24.04, `t3.medium` (`c7i.xlarge` if `RUNNER=local`, since tests run
+   on the box's CPUs), a key pair, security group allowing 22 (your IP), 80 and 443 (anywhere).
+   If `RUNNER=lambda`, attach an instance role allowed to `lambda:InvokeFunction` on `botteam-runner`.
+   Optional but wise: allocate an Elastic IP so the address survives a stop/start.
+2. Get the code and env onto the box:
+   ```bash
+   ssh -i key.pem ubuntu@<ip>
+   git clone https://github.com/RM-28/Project-Unkown app      # private repo: use a token, or scp the folder
+   exit
+   scp -i key.pem .env ubuntu@<ip>:app/.env
+   ```
+3. `ssh -i key.pem ubuntu@<ip> 'bash app/infra/ec2_setup.sh'` prints `https://<ip-with-dashes>.sslip.io`.
+4. Amplify (below), then on the box set `WEB_ORIGIN=https://main.<id>.amplifyapp.com,http://localhost:3000`
+   in `.env` and `sudo systemctl restart botteam`.
+5. Done when the Amplify URL works on a phone on mobile data, and the live dot in the header is green.
+
+What the script does, by hand:
+
 ```bash
 sudo apt update && sudo apt install -y python3.12-venv git caddy
 git clone <repo> app && cd app && python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt
@@ -45,7 +65,10 @@ cp .env.example .env   # fill in; WEB_ORIGIN = the Amplify URL
 
 ## Board on Amplify
 
-App root `web`, env `NEXT_PUBLIC_API_URL=https://1-2-3-4.sslip.io`.
+Amplify console, Create app, GitHub, pick the repo and `main`, tick "my app is a monorepo", app root `web`.
+`amplify.yml` at the repo root holds the build settings. Add the environment variable
+`NEXT_PUBLIC_API_URL=https://1-2-3-4.sslip.io` before the first build (it is baked in at build time,
+so changing it later needs a redeploy).
 
 Fallback (same origin, no CORS/HTTPS fights): `cd web && STATIC_EXPORT=1 NEXT_PUBLIC_API_URL= npm run build`,
 then FastAPI serves `web/out` at `/`.

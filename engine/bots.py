@@ -22,7 +22,8 @@ Rules:
 - Human messages take priority: if a human asks for something, make at least one assignment do it. A message aimed at a specific bot goes to that bot.
 
 Reply with JSON only, no prose:
-{"assignments": [{"bot": "<name>", "parent": "<strategy_id>", "change": "<one small, specific change>"}],
+{"assignments": [{"bot": "<name>", "parent": "<strategy_id>", "change": "<one small, specific change>",
+                  "from_human": "<name of the person whose message this assignment carries out, or empty>"}],
  "hire_angle": "<one sentence: what the next new hire should explore>",
  "reply_to_humans": "<one sentence answering the humans, or empty>"}"""
 

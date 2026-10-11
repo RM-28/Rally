@@ -13,6 +13,8 @@
   --green: #3ddc97;
   --amber: #ffb547;
   --red: #ff5d6c;
+  /* the board's text-warn; Rally redefines --warn under [data-app="rally"] */
+  --warn: var(--amber);
 }
 
 @theme inline {
@@ -25,10 +27,37 @@
   --color-ink-dim: var(--ink-dim);
   --color-blue: var(--blue);
   --color-good: var(--green);
-  --color-warn: var(--amber);
+  --color-warn: var(--warn);
   --color-bad: var(--red);
   --font-sans: var(--font-plex-sans);
   --font-mono: var(--font-plex-mono);
+
+  /* Rally */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-hover: var(--hover);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-on-ink: var(--on-ink);
+  --color-live: var(--live);
+  --color-ok: var(--ok);
+  --color-ok-bg: var(--ok-bg);
+  --color-warn-fg: var(--warn-fg);
+  --color-warn-bg: var(--warn-bg);
+  --color-danger: var(--danger);
+  --color-a1: var(--a1);
+  --color-a1-bg: var(--a1-bg);
+  --color-a2: var(--a2);
+  --color-a5: var(--a5);
+  --color-a5-bg: var(--a5-bg);
+  --color-bad-bg: var(--bad-bg);
+  --color-bar-ink: var(--bar-ink);
+  --font-rally: var(--font-instrument-sans);
+  --font-code: var(--font-jetbrains-mono);
+  --shadow-rally: var(--shadow);
 }
 
 html,
@@ -63,3 +92,116 @@ body {
   50% { box-shadow: 0 0 0 6px var(--blue-soft); }
 }
 .thinking { animation: pulse-ring 1.6s ease-in-out infinite; }
+
+/* ---------- Rally (scoped so the board keeps its navy theme) ---------- */
+[data-app="rally"],
+[data-app="rally"][data-theme="light"] {
+  --bg: #fbfaf9;
+  --surface: #ffffff;
+  --sunken: #f6f5f3;
+  --hover: #eeedea;
+  --line: #e4e3e0;
+  --line-strong: #d2d1cd;
+  --ink: #1c1a16;
+  --ink-2: #524f4b;
+  --ink-3: #716e69;
+  --on-ink: #fcfcfa;
+  --live: #36a558;
+  --ok: #196632;
+  --ok-bg: #dcf7e1;
+  --warn: #de9c31;
+  --warn-fg: #7b4c00;
+  --warn-bg: #fff0d0;
+  --danger: #b63132;
+  --a1: #2769b7; --a1-bg: #dcedff;
+  --a2: #a94620; --a2-bg: #ffe4da;
+  --a3: #00804c; --a3-bg: #d8f3e3;
+  --a4: #8b4a9a; --a4-bg: #f6e4fa;
+  --a5: #007e8f; --a5-bg: #d1f3f6;
+  --a6: #746300; --a6-bg: #f1ecce;
+  --a7: #6359b5; --a7-bg: #e8e8ff;
+  --a8: #aa3f4e; --a8-bg: #ffe2e4;
+  --shadow: 0 1px 2px rgb(41 37 30 / 0.06), 0 12px 32px rgb(41 37 30 / 0.08);
+  /* board v3: failures, one fill per project on the calendars, and the text on those fills */
+  --bad-bg: #ffe7e4;
+  --p0: #97c1f7; --p1: #f1aa92; --p2: #89d0aa; --p3: #d8abe2; --p4: #71cfd9;
+  --p5: #d1c681; --p6: #b7b6f6; --p7: #f2a6ab; --p8: #abca8c; --p9: #eaba83;
+  --bar-ink: #262117;
+  --row: 44px;
+  --pad: 14px;
+  --gap: 18px;
+  color-scheme: light;
+}
+[data-app="rally"][data-theme="dark"] {
+  --bg: #11100f;
+  --surface: #1a1917;
+  --sunken: #0d0c0a;
+  --hover: #252421;
+  --line: #2c2b29;
+  --line-strong: #3e3d3a;
+  --ink: #f0eeeb;
+  --ink-2: #b9b7b3;
+  --ink-3: #918f8b;
+  --on-ink: #100f0d;
+  --live: #51c672;
+  --ok: #89da9b;
+  --ok-bg: #1a3520;
+  --warn: #edb345;
+  --warn-fg: #f2cc7a;
+  --warn-bg: #3b2b0d;
+  --danger: #fb817a;
+  --a1: #8dc1ff; --a1-bg: #1d3451;
+  --a2: #fba587; --a2-bg: #4c271a;
+  --a3: #7ad4a5; --a3-bg: #103c28;
+  --a4: #dda7ea; --a4-bg: #402846;
+  --a5: #56d2df; --a5-bg: #003b41;
+  --a6: #d5c66f; --a6-bg: #3a3308;
+  --a7: #b6b4ff; --a7-bg: #302e50;
+  --a8: #fca0a7; --a8-bg: #4d2529;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 32px rgb(0 0 0 / 0.35);
+  --bad-bg: #442321;
+  --p0: #4773ab; --p1: #a25c43; --p2: #31835d; --p3: #8b5d96; --p4: #00828d;
+  --p5: #857829; --p6: #6c68a9; --p7: #a3575f; --p8: #5e7d3b; --p9: #9d6c2d;
+  --bar-ink: #f6f5f2;
+  color-scheme: dark;
+}
+[data-app="rally"][data-density="compact"] {
+  --row: 34px;
+  --pad: 9px;
+  --gap: 10px;
+}
+[data-app="rally"] :focus-visible { outline: 2px solid var(--a1); outline-offset: 2px; }
+[data-app="rally"] ::selection { background: var(--a1-bg); }
+[data-app="rally"] button:not(:disabled),
+[data-app="rally"] select,
+[data-app="rally"] [role="button"] { cursor: pointer; }
+
+/* Material Symbols Outlined, weight 300, FILL 0 (the stylesheet is loaded in app/(rally)/layout.tsx) */
+.ms {
+  font-family: "Material Symbols Outlined";
+  font-weight: 300;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  direction: ltr;
+  font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+@keyframes rpulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.75); }
+}
+@keyframes rblink { 50% { opacity: 0; } }
+.r-pulse { animation: rpulse 1.6s ease-in-out infinite; }
+.r-pulse-fast { animation: rpulse 1.4s ease-in-out infinite; }
+.r-caret { animation: rblink 1s steps(1) infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .r-pulse, .r-pulse-fast, .r-caret { animation: none; }
+}
+/* the composer card shows focus instead of its textarea */
+[data-app="rally"] textarea.composer:focus-visible { outline: none; }
