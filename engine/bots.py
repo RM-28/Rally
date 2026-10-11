@@ -71,6 +71,8 @@ Rules:
 - Keep the file self-contained: standard library only, allowed imports only.
 - Check time.time() in every loop and stop at 80% of time_limit.
 - Never catch an exception and silently return the starting schedule.
+- Plan briefly, then write the code. Do not draft the whole file in your reasoning; your token budget is limited
+  and a reply without the code block counts as a failure.
 
 Output format: the complete new strategy file in ONE ```python block, then one line starting `NOTE:` saying what
 changed in under 20 words. Nothing else."""

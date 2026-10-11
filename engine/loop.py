@@ -354,7 +354,7 @@ class RunLoop:
             try:
                 text = await call_model(B.worker_messages(bot, self.job.brief(), parent["code"], a["change"],
                                                           self.playbook, error, code),
-                                        role="worker", max_tokens=16000)
+                                        role="worker", max_tokens=32000)
             except Exception as exc:  # noqa: BLE001
                 error = f"model call failed: {type(exc).__name__}: {exc}"
                 doc["error"] = error

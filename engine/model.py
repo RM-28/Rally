@@ -11,6 +11,8 @@ from engine import config
 MAX_RPM = 50
 MAX_IN_FLIGHT = 8
 MAX_RETRIES = 3
+STALL_TIMEOUT_S = 60     # no chunk for this long: abort and retry
+TOTAL_TIMEOUT_S = 360    # whole streamed reply (32k tokens at ~200 tok/s fits)
 
 _client = None
 _sem: asyncio.Semaphore | None = None
@@ -81,27 +83,47 @@ async def call_model(messages, *, role, max_tokens=8000, temperature=0.8) -> str
         async with _sem:
             t0 = time.monotonic()
             try:
-                resp = await client.chat.completions.create(
-                    model=config.LUMINAL_MODEL, messages=messages,
-                    max_tokens=max_tokens, temperature=temperature,
-                )
+                # Streaming: Luminal returned 503 after ~2 min on long non-streamed generations,
+                # while the same request streamed finishes in ~20 s.
+                text, usage = await asyncio.wait_for(
+                    _stream(client, messages, max_tokens, temperature), timeout=TOTAL_TIMEOUT_S)
             except Exception as exc:  # noqa: BLE001
                 last_exc = exc
-                if attempt < MAX_RETRIES and _retryable(exc):
+                if attempt < MAX_RETRIES and (_retryable(exc) or isinstance(exc, asyncio.TimeoutError)):
+                    print(f"[model] {role} attempt {attempt + 1} failed ({type(exc).__name__}), retrying")
                     await asyncio.sleep(2 ** attempt * 2)
                     continue
                 raise
             secs = time.monotonic() - t0
-        u = resp.usage
         try:
             from engine import store
             await asyncio.to_thread(store.record_usage, role,
-                                    getattr(u, "prompt_tokens", 0) or 0,
-                                    getattr(u, "completion_tokens", 0) or 0, secs)
+                                    getattr(usage, "prompt_tokens", 0) or 0,
+                                    getattr(usage, "completion_tokens", 0) or 0, secs)
         except Exception as exc:  # noqa: BLE001 - usage logging must never kill a call
             print(f"[model] usage not recorded: {exc}")
-        return resp.choices[0].message.content or ""
+        return text
     raise last_exc  # pragma: no cover
+
+
+async def _stream(client, messages, max_tokens, temperature):
+    """Collects the answer (not the reasoning) from a streamed completion. Aborts if the stream stalls."""
+    stream = await client.chat.completions.create(
+        model=config.LUMINAL_MODEL, messages=messages, max_tokens=max_tokens,
+        temperature=temperature, stream=True, stream_options={"include_usage": True},
+    )
+    parts, usage = [], None
+    it = stream.__aiter__()
+    while True:
+        try:
+            chunk = await asyncio.wait_for(it.__anext__(), timeout=STALL_TIMEOUT_S)
+        except StopAsyncIteration:
+            break
+        if chunk.usage:
+            usage = chunk.usage
+        if chunk.choices and chunk.choices[0].delta.content:
+            parts.append(chunk.choices[0].delta.content)
+    return "".join(parts), usage
 
 
 _FENCE = re.compile(r"```(?:python|py)?[ \t]*\n(.*?)```", re.DOTALL)
