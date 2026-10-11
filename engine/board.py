@@ -1,19 +1,16 @@
-"""Board v3 reads: the Results screen and "Schedule your team".
+"""Board v3 reads for the Results screen, plus a one-time backfill of FCFS calendars on older runs.
 
 Results only read what the scripts already wrote (data/*.json and the main run in Mongo); nothing is
-recomputed here. Schedule runs the frozen best strategy once on the visitor's own calendar, in the same
-sandbox as the bots' code. It never tunes anything, so the final results stay valid.
+recomputed here. "Schedule your team" lives in api.py (POST /api/schedule, GET /api/team-schedule).
 """
 from __future__ import annotations
 
-import asyncio
 import json
 from statistics import mean
 
 from engine import config, store
 from engine.config import DATA
 from engine.jobs import get_job
-from engine.runner.core import run_child
 
 FINAL_LABELS = {
     "heldout": ("held_out", "Held-out benchmarks", "{n} instances, vs best known"),
@@ -37,6 +34,18 @@ def _who(bot: str | None) -> str:
     return BASELINE_NAMES.get(bot[9:], bot[9:]) if bot.startswith("baseline:") else bot
 
 
+def _shorter(rows: dict) -> float | None:
+    """Mean per-instance cut in finish time vs the best simple rule, from the recorded runs (as in the README)."""
+    runs = rows["_runs"]
+
+    def ms(name):
+        return {i: mean(r["score"] for r in v["runs"] if "score" in r) for i, v in runs.get(name, {}).items()
+                if any("score" in r for r in v["runs"])}
+    base, team = ms("simple_rule"), ms("final")
+    per = [100 * (base[i] - team[i]) / base[i] for i in team if base.get(i)]
+    return round(mean(per), 1) if per else None
+
+
 def _final_rows(lock: dict) -> list[dict]:
     out = []
     for key, (set_id, label, detail) in FINAL_LABELS.items():
@@ -52,8 +61,7 @@ def _final_rows(lock: dict) -> list[dict]:
         out.append({
             "set": set_id, "label": label, "detail": detail.format(n=n),
             "baseline_gap": base, "team_gap": team,
-            # schedule length relative to the reference is 1 + gap/100, so this is how much shorter the team's are
-            "shorter_pct": round(100 * (base - team) / (100 + base), 1),
+            "shorter_pct": _shorter(rows) if "_runs" in rows else round(100 * (base - team) / (100 + base), 1),
             "gap_closed_pct": round(100 * (base - team) / base) if base else None,
             "gap_closed_vs_fcfs_pct": round(100 * (fcfs - team) / fcfs) if fcfs else None,
         })
@@ -114,6 +122,21 @@ def _team_size(rows: list[dict] | None) -> list[dict]:
     return out
 
 
+def _head_to_head(rows: list[dict] | None) -> list[dict]:
+    """data/head_to_head.json holds a per-minute curve per team size; the board wants a few marks."""
+    out = []
+    for r in rows or []:
+        c = r.get("curve") or {}
+        by = c.get("by_minute") or {}
+        end = str(r.get("minutes", 15))
+        at = lambda m, k="practice": (by.get(str(m)) or {}).get(k)  # noqa: E731
+        usage = store.usage_totals(c["run_id"]) if c.get("run_id") else {"tokens_in": 0, "tokens_out": 0}
+        out.append({"bots": r["bots"], "run_id": c.get("run_id"), "rounds": c.get("rounds_in_budget"),
+                    "at5": at(5), "at10": at(10), "at15": at(end), "check15": at(end, "check"),
+                    "tokens": usage["tokens_in"] + usage["tokens_out"]})
+    return out
+
+
 def results() -> dict:
     lock = _read("final_eval.json")
     run = _main_run(lock)
@@ -124,7 +147,7 @@ def results() -> dict:
         "strategy_id": lock and lock.get("strategy_id"), "time_limit": (lock or {}).get("time_limit", config.TIME_LIMIT_S),
         "repeats": (lock or {}).get("repeats", config.REPEATS),
         "main_run": meta, "rounds": rounds,
-        "head_to_head": _read("head_to_head.json") or [],
+        "head_to_head": _head_to_head(_read("head_to_head.json")),
         "team_size": _team_size(_read("compare_bots.json")),
         "approaches": _read("approaches.json") or [],   # written by hand after the run; optional
     }
@@ -154,67 +177,3 @@ def backfill_fcfs_plans(run: dict) -> dict:
         plans["showcase_events_fcfs_plan"] = fcfs(job.surprise(inst))
     store.db().runs.update_one({"_id": run["_id"]}, {"$set": plans})
     return {**run, **plans}
-
-
-# ---------- Schedule your team ----------
-
-SCHEDULE_SLOTS = asyncio.Semaphore(2)   # each request starts two sandboxed processes
-
-
-def frozen_strategy() -> dict:
-    """The strategy the final exam used; before that, the best of the latest finished main run."""
-    d = store.db()
-    lock = _read("final_eval.json")
-    sid = lock and lock.get("strategy_id")
-    if not sid:
-        run = d.runs.find_one({"tag": None, "best_strategy_id": {"$ne": None}}, sort=[("started_at", -1)])
-        sid = run and run.get("best_strategy_id")
-    doc = sid and d.strategies.find_one({"_id": sid}, {"code": 1, "bot": 1, "round": 1})
-    if doc and doc.get("code"):
-        return {"id": doc["_id"], "bot": doc["bot"], "round": doc["round"], "code": doc["code"], "final": bool(lock)}
-    code = get_job("jobshop").baselines()["simple_rule"]
-    return {"id": None, "bot": "baseline:simple_rule", "round": 0, "code": code, "final": False}
-
-
-def build_instance(people: int, projects: list[list[tuple[int, int]]], time_off: list[tuple[int, int, int]],
-                   late: list[tuple[int, int]]) -> dict:
-    release = [0] * len(projects)
-    for j, t in late:
-        release[j] = max(release[j], t)
-    down: dict[str, list[list[int]]] = {}
-    for m, a, b in time_off:
-        down.setdefault(str(m), []).append([a, b])
-    for ws in down.values():
-        ws.sort()
-    return {"id": "your-team", "jobs": [[list(t) for t in p] for p in projects], "n_machines": people,
-            "release": release, "downtime": down or None}
-
-
-async def schedule(inst: dict) -> dict:
-    job = get_job("jobshop")
-    strat = await asyncio.to_thread(frozen_strategy)
-    fcfs_code = job.baselines()["fcfs"]
-    tl = config.TIME_LIMIT_S
-    args = job.call_args(inst, tl)
-
-    def plan(code):
-        res = run_child(code, job.entrypoint, args, tl)
-        if "error" in res:
-            return None, res["error"]
-        try:
-            return job.showcase(inst, res["output"]), None
-        except ValueError as exc:
-            return None, str(exc)
-
-    async with SCHEDULE_SLOTS:
-        (fcfs, ferr), (team, terr) = await asyncio.gather(asyncio.to_thread(plan, fcfs_code),
-                                                          asyncio.to_thread(plan, strat["code"]))
-    if fcfs is None:
-        raise ValueError(f"could not plan this calendar: {ferr}")
-    return {
-        "fcfs": {"makespan": fcfs["makespan"], "rows": fcfs["rows"]},
-        "team": {"makespan": (team or fcfs)["makespan"], "rows": (team or fcfs)["rows"]},
-        "fallback": team is None, "error": terr if team is None else None,
-        "strategy": {"id": strat["id"], "bot": _who(strat["bot"]), "round": strat["round"], "final": strat["final"]},
-        "secs": tl,
-    }

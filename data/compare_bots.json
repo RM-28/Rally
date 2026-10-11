@@ -1,0 +1,58 @@
+[
+  {
+    "bots": 1,
+    "seed": 0,
+    "run_id": "run-d88b71af",
+    "practice": 26.399,
+    "check": 32.133
+  },
+  {
+    "bots": 1,
+    "seed": 1,
+    "run_id": "run-659e75d0",
+    "practice": 17.018,
+    "check": 18.735
+  },
+  {
+    "bots": 2,
+    "seed": 0,
+    "run_id": "run-fdd91659",
+    "practice": 20.374,
+    "check": 25.48
+  },
+  {
+    "bots": 2,
+    "seed": 1,
+    "run_id": "run-b5c9d5d1",
+    "practice": 18.651,
+    "check": 26.15
+  },
+  {
+    "bots": 4,
+    "seed": 0,
+    "run_id": "run-18f5deae",
+    "practice": 22.992,
+    "check": 29.778
+  },
+  {
+    "bots": 4,
+    "seed": 1,
+    "run_id": "run-ea28d412",
+    "practice": 16.268,
+    "check": 19.92
+  },
+  {
+    "bots": 8,
+    "seed": 0,
+    "run_id": "run-47056684",
+    "practice": 17.372,
+    "check": 21.331
+  },
+  {
+    "bots": 8,
+    "seed": 1,
+    "run_id": "run-a33b1321",
+    "practice": 20.51,
+    "check": 26.657
+  }
+]

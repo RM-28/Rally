@@ -30,7 +30,7 @@ function FinalCards({ r }: { r: Results }) {
               <div className="text-[12px] text-ink-3">{f.detail}</div>
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="font-code text-[32px] leading-none font-semibold">{f.shorter_pct.toFixed(1)}%</span>
+              <span className="font-code text-[32px] leading-none font-semibold">{f.shorter_pct != null ? `${f.shorter_pct.toFixed(1)}%` : "–"}</span>
               <span className="text-ink-2">shorter schedules</span>
             </div>
             <div className="flex flex-wrap gap-x-4 text-[13px]">

@@ -9,7 +9,6 @@ out/
 infra/build/
 *.zip
 data/solver_line_*.json
-
 .npmrc
 
 *.pdf

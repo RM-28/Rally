@@ -1,0 +1,2274 @@
+{
+  "ran_at": "2026-10-11T19:38:59.951481+00:00",
+  "splits_commit": "7e9e53045ba00e0578432642fa0e12cc34c1af43",
+  "strategy_id": "run-bc1e8aff-r8-Atlas",
+  "strategy_bot": "Atlas",
+  "time_limit": 2.0,
+  "repeats": 3,
+  "forced": false,
+  "secs": 24.8,
+  "table": {
+    "heldout": {
+      "fcfs": {
+        "ok": true,
+        "gap": 37.205,
+        "spread": 15.791,
+        "per_instance": {
+          "ta46": 54.527,
+          "ta47": 69.259,
+          "ta48": 48.668,
+          "ta49": 44.106,
+          "ta50": 48.65,
+          "ta56": 44.624,
+          "ta57": 29.834,
+          "ta58": 30.537,
+          "ta59": 45.122,
+          "ta60": 25.009,
+          "ta61": 48.71,
+          "ta62": 43.499,
+          "ta63": 45.953,
+          "ta64": 43.301,
+          "ta65": 44.624,
+          "swv16": 13.577,
+          "swv17": 21.331,
+          "swv18": 5.295,
+          "swv19": 26.873,
+          "swv20": 10.592
+        },
+        "errors": []
+      },
+      "simple_rule": {
+        "ok": true,
+        "gap": 24.029,
+        "spread": 8.162,
+        "per_instance": {
+          "ta46": 31.964,
+          "ta47": 37.677,
+          "ta48": 34.221,
+          "ta49": 35.467,
+          "ta50": 26.116,
+          "ta56": 26.933,
+          "ta57": 26.572,
+          "ta58": 16.638,
+          "ta59": 24.068,
+          "ta60": 28.535,
+          "ta61": 25.732,
+          "ta62": 26.839,
+          "ta63": 27.804,
+          "ta64": 27.572,
+          "ta65": 22.275,
+          "swv16": 18.092,
+          "swv17": 10.308,
+          "swv18": 11.886,
+          "swv19": 11.185,
+          "swv20": 10.698
+        },
+        "errors": []
+      },
+      "final": {
+        "ok": true,
+        "gap": 8.865,
+        "spread": 6.091,
+        "per_instance": {
+          "ta46": 13.162,
+          "ta47": 10.562,
+          "ta48": 12.961,
+          "ta49": 17.514,
+          "ta50": 19.765,
+          "ta56": 6.784,
+          "ta57": 6.309,
+          "ta58": 12.617,
+          "ta59": 10.546,
+          "ta60": 7.039,
+          "ta61": 11.402,
+          "ta62": 15.592,
+          "ta63": 9.583,
+          "ta64": 9.006,
+          "ta65": 14.459,
+          "swv16": 0.0,
+          "swv17": 0.0,
+          "swv18": 0.0,
+          "swv19": 0.0,
+          "swv20": 0.0
+        },
+        "errors": []
+      },
+      "_runs": {
+        "fcfs": {
+          "ta46": {
+            "instance_id": "ta46",
+            "runs": [
+              {
+                "score": 3123.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3123.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3123.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "ta47": {
+            "instance_id": "ta47",
+            "runs": [
+              {
+                "score": 3221.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3221.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3221.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "ta48": {
+            "instance_id": "ta48",
+            "runs": [
+              {
+                "score": 2902.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 2902.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 2902.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "ta49": {
+            "instance_id": "ta49",
+            "runs": [
+              {
+                "score": 2836.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 2836.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 2836.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "ta50": {
+            "instance_id": "ta50",
+            "runs": [
+              {
+                "score": 2863.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 2863.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 2863.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "ta56": {
+            "instance_id": "ta56",
+            "runs": [
+              {
+                "score": 4022.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 4022.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 4022.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "ta57": {
+            "instance_id": "ta57",
+            "runs": [
+              {
+                "score": 3821.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3821.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3821.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "ta58": {
+            "instance_id": "ta58",
+            "runs": [
+              {
+                "score": 3766.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3766.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3766.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "ta59": {
+            "instance_id": "ta59",
+            "runs": [
+              {
+                "score": 3853.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3853.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3853.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "ta60": {
+            "instance_id": "ta60",
+            "runs": [
+              {
+                "score": 3404.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3404.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3404.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "ta61": {
+            "instance_id": "ta61",
+            "runs": [
+              {
+                "score": 4265.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 4265.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 4265.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "ta62": {
+            "instance_id": "ta62",
+            "runs": [
+              {
+                "score": 4117.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 4117.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 4117.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "ta63": {
+            "instance_id": "ta63",
+            "runs": [
+              {
+                "score": 4021.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 4021.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 4021.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "ta64": {
+            "instance_id": "ta64",
+            "runs": [
+              {
+                "score": 3872.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3872.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3872.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "ta65": {
+            "instance_id": "ta65",
+            "runs": [
+              {
+                "score": 3941.0,
+                "secs": 0.0002
+              },
+              {
+                "score": 3941.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3941.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "swv16": {
+            "instance_id": "swv16",
+            "runs": [
+              {
+                "score": 3321.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3321.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3321.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "swv17": {
+            "instance_id": "swv17",
+            "runs": [
+              {
+                "score": 3390.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3390.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3390.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "swv18": {
+            "instance_id": "swv18",
+            "runs": [
+              {
+                "score": 3003.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3003.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3003.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "swv19": {
+            "instance_id": "swv19",
+            "runs": [
+              {
+                "score": 3607.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3607.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3607.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "swv20": {
+            "instance_id": "swv20",
+            "runs": [
+              {
+                "score": 3122.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3122.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3122.0,
+                "secs": 0.0001
+              }
+            ]
+          }
+        },
+        "simple_rule": {
+          "ta46": {
+            "instance_id": "ta46",
+            "runs": [
+              {
+                "score": 2667.0,
+                "secs": 0.0065
+              },
+              {
+                "score": 2667.0,
+                "secs": 0.0064
+              },
+              {
+                "score": 2667.0,
+                "secs": 0.0071
+              }
+            ]
+          },
+          "ta47": {
+            "instance_id": "ta47",
+            "runs": [
+              {
+                "score": 2620.0,
+                "secs": 0.0068
+              },
+              {
+                "score": 2620.0,
+                "secs": 0.0075
+              },
+              {
+                "score": 2620.0,
+                "secs": 0.0061
+              }
+            ]
+          },
+          "ta48": {
+            "instance_id": "ta48",
+            "runs": [
+              {
+                "score": 2620.0,
+                "secs": 0.008
+              },
+              {
+                "score": 2620.0,
+                "secs": 0.0071
+              },
+              {
+                "score": 2620.0,
+                "secs": 0.0076
+              }
+            ]
+          },
+          "ta49": {
+            "instance_id": "ta49",
+            "runs": [
+              {
+                "score": 2666.0,
+                "secs": 0.007
+              },
+              {
+                "score": 2666.0,
+                "secs": 0.0075
+              },
+              {
+                "score": 2666.0,
+                "secs": 0.0075
+              }
+            ]
+          },
+          "ta50": {
+            "instance_id": "ta50",
+            "runs": [
+              {
+                "score": 2429.0,
+                "secs": 0.0074
+              },
+              {
+                "score": 2429.0,
+                "secs": 0.0066
+              },
+              {
+                "score": 2429.0,
+                "secs": 0.007
+              }
+            ]
+          },
+          "ta56": {
+            "instance_id": "ta56",
+            "runs": [
+              {
+                "score": 3530.0,
+                "secs": 0.0124
+              },
+              {
+                "score": 3530.0,
+                "secs": 0.0122
+              },
+              {
+                "score": 3530.0,
+                "secs": 0.0124
+              }
+            ]
+          },
+          "ta57": {
+            "instance_id": "ta57",
+            "runs": [
+              {
+                "score": 3725.0,
+                "secs": 0.0136
+              },
+              {
+                "score": 3725.0,
+                "secs": 0.0123
+              },
+              {
+                "score": 3725.0,
+                "secs": 0.0128
+              }
+            ]
+          },
+          "ta58": {
+            "instance_id": "ta58",
+            "runs": [
+              {
+                "score": 3365.0,
+                "secs": 0.0128
+              },
+              {
+                "score": 3365.0,
+                "secs": 0.0126
+              },
+              {
+                "score": 3365.0,
+                "secs": 0.0127
+              }
+            ]
+          },
+          "ta59": {
+            "instance_id": "ta59",
+            "runs": [
+              {
+                "score": 3294.0,
+                "secs": 0.0135
+              },
+              {
+                "score": 3294.0,
+                "secs": 0.014
+              },
+              {
+                "score": 3294.0,
+                "secs": 0.0142
+              }
+            ]
+          },
+          "ta60": {
+            "instance_id": "ta60",
+            "runs": [
+              {
+                "score": 3500.0,
+                "secs": 0.0133
+              },
+              {
+                "score": 3500.0,
+                "secs": 0.0128
+              },
+              {
+                "score": 3500.0,
+                "secs": 0.0129
+              }
+            ]
+          },
+          "ta61": {
+            "instance_id": "ta61",
+            "runs": [
+              {
+                "score": 3606.0,
+                "secs": 0.0173
+              },
+              {
+                "score": 3606.0,
+                "secs": 0.0173
+              },
+              {
+                "score": 3606.0,
+                "secs": 0.017
+              }
+            ]
+          },
+          "ta62": {
+            "instance_id": "ta62",
+            "runs": [
+              {
+                "score": 3639.0,
+                "secs": 0.0183
+              },
+              {
+                "score": 3639.0,
+                "secs": 0.0185
+              },
+              {
+                "score": 3639.0,
+                "secs": 0.0177
+              }
+            ]
+          },
+          "ta63": {
+            "instance_id": "ta63",
+            "runs": [
+              {
+                "score": 3521.0,
+                "secs": 0.0176
+              },
+              {
+                "score": 3521.0,
+                "secs": 0.0179
+              },
+              {
+                "score": 3521.0,
+                "secs": 0.0177
+              }
+            ]
+          },
+          "ta64": {
+            "instance_id": "ta64",
+            "runs": [
+              {
+                "score": 3447.0,
+                "secs": 0.0176
+              },
+              {
+                "score": 3447.0,
+                "secs": 0.0179
+              },
+              {
+                "score": 3447.0,
+                "secs": 0.0158
+              }
+            ]
+          },
+          "ta65": {
+            "instance_id": "ta65",
+            "runs": [
+              {
+                "score": 3332.0,
+                "secs": 0.019
+              },
+              {
+                "score": 3332.0,
+                "secs": 0.0194
+              },
+              {
+                "score": 3332.0,
+                "secs": 0.0195
+              }
+            ]
+          },
+          "swv16": {
+            "instance_id": "swv16",
+            "runs": [
+              {
+                "score": 3453.0,
+                "secs": 0.009
+              },
+              {
+                "score": 3453.0,
+                "secs": 0.0083
+              },
+              {
+                "score": 3453.0,
+                "secs": 0.0087
+              }
+            ]
+          },
+          "swv17": {
+            "instance_id": "swv17",
+            "runs": [
+              {
+                "score": 3082.0,
+                "secs": 0.0086
+              },
+              {
+                "score": 3082.0,
+                "secs": 0.0081
+              },
+              {
+                "score": 3082.0,
+                "secs": 0.0088
+              }
+            ]
+          },
+          "swv18": {
+            "instance_id": "swv18",
+            "runs": [
+              {
+                "score": 3191.0,
+                "secs": 0.0082
+              },
+              {
+                "score": 3191.0,
+                "secs": 0.0084
+              },
+              {
+                "score": 3191.0,
+                "secs": 0.0081
+              }
+            ]
+          },
+          "swv19": {
+            "instance_id": "swv19",
+            "runs": [
+              {
+                "score": 3161.0,
+                "secs": 0.008
+              },
+              {
+                "score": 3161.0,
+                "secs": 0.0081
+              },
+              {
+                "score": 3161.0,
+                "secs": 0.0083
+              }
+            ]
+          },
+          "swv20": {
+            "instance_id": "swv20",
+            "runs": [
+              {
+                "score": 3125.0,
+                "secs": 0.0088
+              },
+              {
+                "score": 3125.0,
+                "secs": 0.0076
+              },
+              {
+                "score": 3125.0,
+                "secs": 0.0084
+              }
+            ]
+          }
+        },
+        "final": {
+          "ta46": {
+            "instance_id": "ta46",
+            "runs": [
+              {
+                "score": 2283.0,
+                "secs": 1.6026
+              },
+              {
+                "score": 2293.0,
+                "secs": 1.6028
+              },
+              {
+                "score": 2285.0,
+                "secs": 1.6029
+              }
+            ]
+          },
+          "ta47": {
+            "instance_id": "ta47",
+            "runs": [
+              {
+                "score": 2105.0,
+                "secs": 1.6028
+              },
+              {
+                "score": 2096.0,
+                "secs": 1.6028
+              },
+              {
+                "score": 2111.0,
+                "secs": 1.6024
+              }
+            ]
+          },
+          "ta48": {
+            "instance_id": "ta48",
+            "runs": [
+              {
+                "score": 2197.0,
+                "secs": 1.6059
+              },
+              {
+                "score": 2213.0,
+                "secs": 1.6024
+              },
+              {
+                "score": 2205.0,
+                "secs": 1.6034
+              }
+            ]
+          },
+          "ta49": {
+            "instance_id": "ta49",
+            "runs": [
+              {
+                "score": 2328.0,
+                "secs": 1.6023
+              },
+              {
+                "score": 2306.0,
+                "secs": 1.6029
+              },
+              {
+                "score": 2304.0,
+                "secs": 1.6024
+              }
+            ]
+          },
+          "ta50": {
+            "instance_id": "ta50",
+            "runs": [
+              {
+                "score": 2306.0,
+                "secs": 1.6035
+              },
+              {
+                "score": 2330.0,
+                "secs": 1.6028
+              },
+              {
+                "score": 2284.0,
+                "secs": 1.6041
+              }
+            ]
+          },
+          "ta56": {
+            "instance_id": "ta56",
+            "runs": [
+              {
+                "score": 2977.0,
+                "secs": 1.6041
+              },
+              {
+                "score": 2955.0,
+                "secs": 1.6026
+              },
+              {
+                "score": 2977.0,
+                "secs": 1.6028
+              }
+            ]
+          },
+          "ta57": {
+            "instance_id": "ta57",
+            "runs": [
+              {
+                "score": 3134.0,
+                "secs": 1.6036
+              },
+              {
+                "score": 3137.0,
+                "secs": 1.6049
+              },
+              {
+                "score": 3115.0,
+                "secs": 1.6029
+              }
+            ]
+          },
+          "ta58": {
+            "instance_id": "ta58",
+            "runs": [
+              {
+                "score": 3243.0,
+                "secs": 1.6028
+              },
+              {
+                "score": 3245.0,
+                "secs": 1.6111
+              },
+              {
+                "score": 3259.0,
+                "secs": 1.6028
+              }
+            ]
+          },
+          "ta59": {
+            "instance_id": "ta59",
+            "runs": [
+              {
+                "score": 2941.0,
+                "secs": 1.6063
+              },
+              {
+                "score": 2932.0,
+                "secs": 1.6098
+              },
+              {
+                "score": 2932.0,
+                "secs": 1.6059
+              }
+            ]
+          },
+          "ta60": {
+            "instance_id": "ta60",
+            "runs": [
+              {
+                "score": 2917.0,
+                "secs": 1.6068
+              },
+              {
+                "score": 2923.0,
+                "secs": 1.6052
+              },
+              {
+                "score": 2904.0,
+                "secs": 1.6122
+              }
+            ]
+          },
+          "ta61": {
+            "instance_id": "ta61",
+            "runs": [
+              {
+                "score": 3213.0,
+                "secs": 1.6052
+              },
+              {
+                "score": 3189.0,
+                "secs": 1.6054
+              },
+              {
+                "score": 3183.0,
+                "secs": 1.607
+              }
+            ]
+          },
+          "ta62": {
+            "instance_id": "ta62",
+            "runs": [
+              {
+                "score": 3318.0,
+                "secs": 1.6064
+              },
+              {
+                "score": 3315.0,
+                "secs": 1.6067
+              },
+              {
+                "score": 3316.0,
+                "secs": 1.6072
+              }
+            ]
+          },
+          "ta63": {
+            "instance_id": "ta63",
+            "runs": [
+              {
+                "score": 3022.0,
+                "secs": 1.6057
+              },
+              {
+                "score": 3007.0,
+                "secs": 1.6073
+              },
+              {
+                "score": 3028.0,
+                "secs": 1.6067
+              }
+            ]
+          },
+          "ta64": {
+            "instance_id": "ta64",
+            "runs": [
+              {
+                "score": 2941.0,
+                "secs": 1.6055
+              },
+              {
+                "score": 2938.0,
+                "secs": 1.605
+              },
+              {
+                "score": 2957.0,
+                "secs": 1.6049
+              }
+            ]
+          },
+          "ta65": {
+            "instance_id": "ta65",
+            "runs": [
+              {
+                "score": 3136.0,
+                "secs": 1.6055
+              },
+              {
+                "score": 3098.0,
+                "secs": 1.6055
+              },
+              {
+                "score": 3123.0,
+                "secs": 1.6052
+              }
+            ]
+          },
+          "swv16": {
+            "instance_id": "swv16",
+            "runs": [
+              {
+                "score": 2924.0,
+                "secs": 1.6063
+              },
+              {
+                "score": 2924.0,
+                "secs": 1.6034
+              },
+              {
+                "score": 2924.0,
+                "secs": 1.6051
+              }
+            ]
+          },
+          "swv17": {
+            "instance_id": "swv17",
+            "runs": [
+              {
+                "score": 2794.0,
+                "secs": 1.6026
+              },
+              {
+                "score": 2794.0,
+                "secs": 1.6029
+              },
+              {
+                "score": 2794.0,
+                "secs": 1.6025
+              }
+            ]
+          },
+          "swv18": {
+            "instance_id": "swv18",
+            "runs": [
+              {
+                "score": 2852.0,
+                "secs": 1.6029
+              },
+              {
+                "score": 2852.0,
+                "secs": 1.6031
+              },
+              {
+                "score": 2852.0,
+                "secs": 1.6026
+              }
+            ]
+          },
+          "swv19": {
+            "instance_id": "swv19",
+            "runs": [
+              {
+                "score": 2843.0,
+                "secs": 1.6025
+              },
+              {
+                "score": 2843.0,
+                "secs": 1.6037
+              },
+              {
+                "score": 2843.0,
+                "secs": 1.603
+              }
+            ]
+          },
+          "swv20": {
+            "instance_id": "swv20",
+            "runs": [
+              {
+                "score": 2823.0,
+                "secs": 1.6029
+              },
+              {
+                "score": 2823.0,
+                "secs": 1.603
+              },
+              {
+                "score": 2823.0,
+                "secs": 1.6037
+              }
+            ]
+          }
+        }
+      }
+    },
+    "fresh": {
+      "fcfs": {
+        "ok": true,
+        "gap": 32.447,
+        "spread": 8.131,
+        "per_instance": {
+          "fresh01": 34.619,
+          "fresh02": 42.723,
+          "fresh03": 46.515,
+          "fresh04": 32.43,
+          "fresh05": 39.699,
+          "fresh06": 31.746,
+          "fresh07": 25.5,
+          "fresh08": 25.581,
+          "fresh09": 19.716,
+          "fresh10": 25.943
+        },
+        "errors": []
+      },
+      "simple_rule": {
+        "ok": true,
+        "gap": 16.884,
+        "spread": 6.239,
+        "per_instance": {
+          "fresh01": 14.381,
+          "fresh02": 21.909,
+          "fresh03": 17.402,
+          "fresh04": 29.284,
+          "fresh05": 24.546,
+          "fresh06": 14.734,
+          "fresh07": 11.75,
+          "fresh08": 13.512,
+          "fresh09": 14.21,
+          "fresh10": 7.109
+        },
+        "errors": []
+      },
+      "final": {
+        "ok": true,
+        "gap": 3.002,
+        "spread": 3.42,
+        "per_instance": {
+          "fresh01": 2.905,
+          "fresh02": 5.721,
+          "fresh03": 7.95,
+          "fresh04": 6.066,
+          "fresh05": 5.086,
+          "fresh06": 3.761,
+          "fresh07": 2.549,
+          "fresh08": 1.067,
+          "fresh09": -1.154,
+          "fresh10": -3.931
+        },
+        "errors": []
+      },
+      "_runs": {
+        "fcfs": {
+          "fresh01": {
+            "instance_id": "fresh01",
+            "runs": [
+              {
+                "score": 2827.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 2827.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 2827.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "fresh02": {
+            "instance_id": "fresh02",
+            "runs": [
+              {
+                "score": 2736.0,
+                "secs": 0.0002
+              },
+              {
+                "score": 2736.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 2736.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "fresh03": {
+            "instance_id": "fresh03",
+            "runs": [
+              {
+                "score": 3090.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3090.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3090.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "fresh04": {
+            "instance_id": "fresh04",
+            "runs": [
+              {
+                "score": 2736.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 2736.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 2736.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "fresh05": {
+            "instance_id": "fresh05",
+            "runs": [
+              {
+                "score": 2692.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 2692.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 2692.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "fresh06": {
+            "instance_id": "fresh06",
+            "runs": [
+              {
+                "score": 3818.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3818.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3818.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "fresh07": {
+            "instance_id": "fresh07",
+            "runs": [
+              {
+                "score": 3578.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3578.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3578.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "fresh08": {
+            "instance_id": "fresh08",
+            "runs": [
+              {
+                "score": 3569.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3569.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3569.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "fresh09": {
+            "instance_id": "fresh09",
+            "runs": [
+              {
+                "score": 3631.0,
+                "secs": 0.0002
+              },
+              {
+                "score": 3631.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3631.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "fresh10": {
+            "instance_id": "fresh10",
+            "runs": [
+              {
+                "score": 3738.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3738.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3738.0,
+                "secs": 0.0001
+              }
+            ]
+          }
+        },
+        "simple_rule": {
+          "fresh01": {
+            "instance_id": "fresh01",
+            "runs": [
+              {
+                "score": 2402.0,
+                "secs": 0.0077
+              },
+              {
+                "score": 2402.0,
+                "secs": 0.0074
+              },
+              {
+                "score": 2402.0,
+                "secs": 0.0081
+              }
+            ]
+          },
+          "fresh02": {
+            "instance_id": "fresh02",
+            "runs": [
+              {
+                "score": 2337.0,
+                "secs": 0.008
+              },
+              {
+                "score": 2337.0,
+                "secs": 0.0077
+              },
+              {
+                "score": 2337.0,
+                "secs": 0.0075
+              }
+            ]
+          },
+          "fresh03": {
+            "instance_id": "fresh03",
+            "runs": [
+              {
+                "score": 2476.0,
+                "secs": 0.0101
+              },
+              {
+                "score": 2476.0,
+                "secs": 0.0076
+              },
+              {
+                "score": 2476.0,
+                "secs": 0.0083
+              }
+            ]
+          },
+          "fresh04": {
+            "instance_id": "fresh04",
+            "runs": [
+              {
+                "score": 2671.0,
+                "secs": 0.0108
+              },
+              {
+                "score": 2671.0,
+                "secs": 0.0077
+              },
+              {
+                "score": 2671.0,
+                "secs": 0.0072
+              }
+            ]
+          },
+          "fresh05": {
+            "instance_id": "fresh05",
+            "runs": [
+              {
+                "score": 2400.0,
+                "secs": 0.0088
+              },
+              {
+                "score": 2400.0,
+                "secs": 0.008
+              },
+              {
+                "score": 2400.0,
+                "secs": 0.0085
+              }
+            ]
+          },
+          "fresh06": {
+            "instance_id": "fresh06",
+            "runs": [
+              {
+                "score": 3325.0,
+                "secs": 0.0158
+              },
+              {
+                "score": 3325.0,
+                "secs": 0.014
+              },
+              {
+                "score": 3325.0,
+                "secs": 0.015
+              }
+            ]
+          },
+          "fresh07": {
+            "instance_id": "fresh07",
+            "runs": [
+              {
+                "score": 3186.0,
+                "secs": 0.0162
+              },
+              {
+                "score": 3186.0,
+                "secs": 0.0155
+              },
+              {
+                "score": 3186.0,
+                "secs": 0.017
+              }
+            ]
+          },
+          "fresh08": {
+            "instance_id": "fresh08",
+            "runs": [
+              {
+                "score": 3226.0,
+                "secs": 0.016
+              },
+              {
+                "score": 3226.0,
+                "secs": 0.0155
+              },
+              {
+                "score": 3226.0,
+                "secs": 0.0156
+              }
+            ]
+          },
+          "fresh09": {
+            "instance_id": "fresh09",
+            "runs": [
+              {
+                "score": 3464.0,
+                "secs": 0.0146
+              },
+              {
+                "score": 3464.0,
+                "secs": 0.0178
+              },
+              {
+                "score": 3464.0,
+                "secs": 0.0171
+              }
+            ]
+          },
+          "fresh10": {
+            "instance_id": "fresh10",
+            "runs": [
+              {
+                "score": 3179.0,
+                "secs": 0.0177
+              },
+              {
+                "score": 3179.0,
+                "secs": 0.0152
+              },
+              {
+                "score": 3179.0,
+                "secs": 0.0157
+              }
+            ]
+          }
+        },
+        "final": {
+          "fresh01": {
+            "instance_id": "fresh01",
+            "runs": [
+              {
+                "score": 2161.0,
+                "secs": 1.6064
+              },
+              {
+                "score": 2157.0,
+                "secs": 1.6058
+              },
+              {
+                "score": 2165.0,
+                "secs": 1.6029
+              }
+            ]
+          },
+          "fresh02": {
+            "instance_id": "fresh02",
+            "runs": [
+              {
+                "score": 2015.0,
+                "secs": 1.6038
+              },
+              {
+                "score": 2033.0,
+                "secs": 1.6233
+              },
+              {
+                "score": 2032.0,
+                "secs": 1.6032
+              }
+            ]
+          },
+          "fresh03": {
+            "instance_id": "fresh03",
+            "runs": [
+              {
+                "score": 2274.0,
+                "secs": 1.6033
+              },
+              {
+                "score": 2284.0,
+                "secs": 1.6047
+              },
+              {
+                "score": 2272.0,
+                "secs": 1.6027
+              }
+            ]
+          },
+          "fresh04": {
+            "instance_id": "fresh04",
+            "runs": [
+              {
+                "score": 2191.0,
+                "secs": 1.6029
+              },
+              {
+                "score": 2191.0,
+                "secs": 1.6032
+              },
+              {
+                "score": 2192.0,
+                "secs": 1.6034
+              }
+            ]
+          },
+          "fresh05": {
+            "instance_id": "fresh05",
+            "runs": [
+              {
+                "score": 2022.0,
+                "secs": 1.6054
+              },
+              {
+                "score": 2029.0,
+                "secs": 1.6062
+              },
+              {
+                "score": 2024.0,
+                "secs": 1.6062
+              }
+            ]
+          },
+          "fresh06": {
+            "instance_id": "fresh06",
+            "runs": [
+              {
+                "score": 3033.0,
+                "secs": 1.6085
+              },
+              {
+                "score": 3003.0,
+                "secs": 1.6052
+              },
+              {
+                "score": 2985.0,
+                "secs": 1.6054
+              }
+            ]
+          },
+          "fresh07": {
+            "instance_id": "fresh07",
+            "runs": [
+              {
+                "score": 2926.0,
+                "secs": 1.6086
+              },
+              {
+                "score": 2926.0,
+                "secs": 1.6095
+              },
+              {
+                "score": 2919.0,
+                "secs": 1.6131
+              }
+            ]
+          },
+          "fresh08": {
+            "instance_id": "fresh08",
+            "runs": [
+              {
+                "score": 2874.0,
+                "secs": 1.6046
+              },
+              {
+                "score": 2866.0,
+                "secs": 1.6062
+              },
+              {
+                "score": 2877.0,
+                "secs": 1.6079
+              }
+            ]
+          },
+          "fresh09": {
+            "instance_id": "fresh09",
+            "runs": [
+              {
+                "score": 3018.0,
+                "secs": 1.6053
+              },
+              {
+                "score": 3011.0,
+                "secs": 1.6064
+              },
+              {
+                "score": 2965.0,
+                "secs": 1.6062
+              }
+            ]
+          },
+          "fresh10": {
+            "instance_id": "fresh10",
+            "runs": [
+              {
+                "score": 2847.0,
+                "secs": 1.606
+              },
+              {
+                "score": 2844.0,
+                "secs": 1.6053
+              },
+              {
+                "score": 2863.0,
+                "secs": 1.6066
+              }
+            ]
+          }
+        }
+      }
+    },
+    "events": {
+      "fcfs": {
+        "ok": true,
+        "gap": 44.244,
+        "spread": 9.689,
+        "per_instance": {
+          "event01": 48.475,
+          "event02": 52.386,
+          "event03": 55.317,
+          "event04": 37.32,
+          "event05": 61.554,
+          "event06": 40.415,
+          "event07": 27.983,
+          "event08": 34.41,
+          "event09": 43.004,
+          "event10": 41.579
+        },
+        "errors": []
+      },
+      "simple_rule": {
+        "ok": true,
+        "gap": 22.515,
+        "spread": 8.365,
+        "per_instance": {
+          "event01": 34.821,
+          "event02": 24.822,
+          "event03": 27.802,
+          "event04": 28.818,
+          "event05": 28.137,
+          "event06": 16.013,
+          "event07": 13.554,
+          "event08": 25.556,
+          "event09": 20.671,
+          "event10": 4.954
+        },
+        "errors": []
+      },
+      "final": {
+        "ok": true,
+        "gap": 6.032,
+        "spread": 5.179,
+        "per_instance": {
+          "event01": -2.813,
+          "event02": 3.063,
+          "event03": 8.139,
+          "event04": 14.697,
+          "event05": 12.998,
+          "event06": 9.059,
+          "event07": 4.118,
+          "event08": 7.5,
+          "event09": 1.252,
+          "event10": 2.312
+        },
+        "errors": []
+      },
+      "_runs": {
+        "fcfs": {
+          "event01": {
+            "instance_id": "event01",
+            "runs": [
+              {
+                "score": 3360.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3360.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3360.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "event02": {
+            "instance_id": "event02",
+            "runs": [
+              {
+                "score": 3002.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3002.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3002.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "event03": {
+            "instance_id": "event03",
+            "runs": [
+              {
+                "score": 3257.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3257.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3257.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "event04": {
+            "instance_id": "event04",
+            "runs": [
+              {
+                "score": 2859.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 2859.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 2859.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "event05": {
+            "instance_id": "event05",
+            "runs": [
+              {
+                "score": 3244.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3244.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3244.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "event06": {
+            "instance_id": "event06",
+            "runs": [
+              {
+                "score": 4402.0,
+                "secs": 0.0002
+              },
+              {
+                "score": 4402.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 4402.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "event07": {
+            "instance_id": "event07",
+            "runs": [
+              {
+                "score": 3947.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3947.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3947.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "event08": {
+            "instance_id": "event08",
+            "runs": [
+              {
+                "score": 3871.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3871.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 3871.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "event09": {
+            "instance_id": "event09",
+            "runs": [
+              {
+                "score": 4303.0,
+                "secs": 0.0002
+              },
+              {
+                "score": 4303.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 4303.0,
+                "secs": 0.0001
+              }
+            ]
+          },
+          "event10": {
+            "instance_id": "event10",
+            "runs": [
+              {
+                "score": 4287.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 4287.0,
+                "secs": 0.0001
+              },
+              {
+                "score": 4287.0,
+                "secs": 0.0001
+              }
+            ]
+          }
+        },
+        "simple_rule": {
+          "event01": {
+            "instance_id": "event01",
+            "runs": [
+              {
+                "score": 3051.0,
+                "secs": 0.0093
+              },
+              {
+                "score": 3051.0,
+                "secs": 0.008
+              },
+              {
+                "score": 3051.0,
+                "secs": 0.008
+              }
+            ]
+          },
+          "event02": {
+            "instance_id": "event02",
+            "runs": [
+              {
+                "score": 2459.0,
+                "secs": 0.0091
+              },
+              {
+                "score": 2459.0,
+                "secs": 0.0081
+              },
+              {
+                "score": 2459.0,
+                "secs": 0.0103
+              }
+            ]
+          },
+          "event03": {
+            "instance_id": "event03",
+            "runs": [
+              {
+                "score": 2680.0,
+                "secs": 0.0083
+              },
+              {
+                "score": 2680.0,
+                "secs": 0.0085
+              },
+              {
+                "score": 2680.0,
+                "secs": 0.0081
+              }
+            ]
+          },
+          "event04": {
+            "instance_id": "event04",
+            "runs": [
+              {
+                "score": 2682.0,
+                "secs": 0.0082
+              },
+              {
+                "score": 2682.0,
+                "secs": 0.0083
+              },
+              {
+                "score": 2682.0,
+                "secs": 0.0091
+              }
+            ]
+          },
+          "event05": {
+            "instance_id": "event05",
+            "runs": [
+              {
+                "score": 2573.0,
+                "secs": 0.0083
+              },
+              {
+                "score": 2573.0,
+                "secs": 0.0085
+              },
+              {
+                "score": 2573.0,
+                "secs": 0.009
+              }
+            ]
+          },
+          "event06": {
+            "instance_id": "event06",
+            "runs": [
+              {
+                "score": 3637.0,
+                "secs": 0.0168
+              },
+              {
+                "score": 3637.0,
+                "secs": 0.0133
+              },
+              {
+                "score": 3637.0,
+                "secs": 0.0227
+              }
+            ]
+          },
+          "event07": {
+            "instance_id": "event07",
+            "runs": [
+              {
+                "score": 3502.0,
+                "secs": 0.0161
+              },
+              {
+                "score": 3502.0,
+                "secs": 0.0195
+              },
+              {
+                "score": 3502.0,
+                "secs": 0.0183
+              }
+            ]
+          },
+          "event08": {
+            "instance_id": "event08",
+            "runs": [
+              {
+                "score": 3616.0,
+                "secs": 0.0184
+              },
+              {
+                "score": 3616.0,
+                "secs": 0.0182
+              },
+              {
+                "score": 3616.0,
+                "secs": 0.0167
+              }
+            ]
+          },
+          "event09": {
+            "instance_id": "event09",
+            "runs": [
+              {
+                "score": 3631.0,
+                "secs": 0.0156
+              },
+              {
+                "score": 3631.0,
+                "secs": 0.0163
+              },
+              {
+                "score": 3631.0,
+                "secs": 0.0218
+              }
+            ]
+          },
+          "event10": {
+            "instance_id": "event10",
+            "runs": [
+              {
+                "score": 3178.0,
+                "secs": 0.0175
+              },
+              {
+                "score": 3178.0,
+                "secs": 0.0172
+              },
+              {
+                "score": 3178.0,
+                "secs": 0.0155
+              }
+            ]
+          }
+        },
+        "final": {
+          "event01": {
+            "instance_id": "event01",
+            "runs": [
+              {
+                "score": 2189.0,
+                "secs": 1.6029
+              },
+              {
+                "score": 2207.0,
+                "secs": 1.6037
+              },
+              {
+                "score": 2202.0,
+                "secs": 1.603
+              }
+            ]
+          },
+          "event02": {
+            "instance_id": "event02",
+            "runs": [
+              {
+                "score": 2006.0,
+                "secs": 1.6028
+              },
+              {
+                "score": 2058.0,
+                "secs": 1.6025
+              },
+              {
+                "score": 2027.0,
+                "secs": 1.6028
+              }
+            ]
+          },
+          "event03": {
+            "instance_id": "event03",
+            "runs": [
+              {
+                "score": 2276.0,
+                "secs": 1.603
+              },
+              {
+                "score": 2260.0,
+                "secs": 1.6027
+              },
+              {
+                "score": 2267.0,
+                "secs": 1.6037
+              }
+            ]
+          },
+          "event04": {
+            "instance_id": "event04",
+            "runs": [
+              {
+                "score": 2388.0,
+                "secs": 1.603
+              },
+              {
+                "score": 2388.0,
+                "secs": 1.6027
+              },
+              {
+                "score": 2388.0,
+                "secs": 1.6039
+              }
+            ]
+          },
+          "event05": {
+            "instance_id": "event05",
+            "runs": [
+              {
+                "score": 2269.0,
+                "secs": 1.6034
+              },
+              {
+                "score": 2269.0,
+                "secs": 1.603
+              },
+              {
+                "score": 2269.0,
+                "secs": 1.603
+              }
+            ]
+          },
+          "event06": {
+            "instance_id": "event06",
+            "runs": [
+              {
+                "score": 3419.0,
+                "secs": 1.6044
+              },
+              {
+                "score": 3419.0,
+                "secs": 1.6027
+              },
+              {
+                "score": 3419.0,
+                "secs": 1.6031
+              }
+            ]
+          },
+          "event07": {
+            "instance_id": "event07",
+            "runs": [
+              {
+                "score": 3211.0,
+                "secs": 1.6031
+              },
+              {
+                "score": 3211.0,
+                "secs": 1.6033
+              },
+              {
+                "score": 3211.0,
+                "secs": 1.6039
+              }
+            ]
+          },
+          "event08": {
+            "instance_id": "event08",
+            "runs": [
+              {
+                "score": 3096.0,
+                "secs": 1.603
+              },
+              {
+                "score": 3096.0,
+                "secs": 1.6705
+              },
+              {
+                "score": 3096.0,
+                "secs": 1.6058
+              }
+            ]
+          },
+          "event09": {
+            "instance_id": "event09",
+            "runs": [
+              {
+                "score": 3056.0,
+                "secs": 1.6065
+              },
+              {
+                "score": 3042.0,
+                "secs": 1.6071
+              },
+              {
+                "score": 3042.0,
+                "secs": 1.6063
+              }
+            ]
+          },
+          "event10": {
+            "instance_id": "event10",
+            "runs": [
+              {
+                "score": 3098.0,
+                "secs": 1.6068
+              },
+              {
+                "score": 3098.0,
+                "secs": 1.6048
+              },
+              {
+                "score": 3098.0,
+                "secs": 1.606
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

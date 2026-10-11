@@ -49,6 +49,8 @@ type Board = {
   boardUrl: string;
   drawer: string | null;
   openStrategy: (id: string | null) => void;
+  /** bumps whenever anyone schedules a team, so the shared team calendar refetches */
+  teamKey: number;
 };
 
 const Ctx = createContext<Board | null>(null);
@@ -74,12 +76,16 @@ export default function BoardProvider({ children }: { children: React.ReactNode 
   const [view, setView] = useState<"board" | "remote">("board");
   const [boardUrl, setBoardUrl] = useState("");
   const [drawer, setDrawer] = useState<string | null>(null);
+  const [teamKey, setTeamKey] = useState(0);
   const refetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const runIdRef = useRef<string | null>(null); // only show live events for the run on screen
 
   const fetchState = useCallback(async () => {
     try {
       const r = await fetch(`${API_URL}/api/state`, { cache: "no-store" });
-      setState(await r.json());
+      const st: State = await r.json();
+      runIdRef.current = st.run?._id ?? null;
+      setState(st);
       setPending([]);
       setError(null);
     } catch {
@@ -127,6 +133,11 @@ export default function BoardProvider({ children }: { children: React.ReactNode 
       };
       es.onmessage = (m) => {
         const e: LiveEvent = JSON.parse(m.data);
+        // background experiments (tagged runs) write events too; a new board-started run is picked up via refetch
+        if (e.run_id && runIdRef.current && e.run_id !== runIdRef.current) {
+          if (e.type === "round_started" || e.type === "hired") scheduleRefetch();
+          return;
+        }
         const d = e.data as Record<string, unknown>;
         if (e.bot) {
           setLive((prev) => {
@@ -148,6 +159,7 @@ export default function BoardProvider({ children }: { children: React.ReactNode 
           });
         }
         if (e.type === "round_started") setLive({});
+        if (e.type === "team_scheduled") setTeamKey((k) => k + 1);
         const text = describe(e);
         if (text) setFeed((a) => [{ id: e._id, text, ts: e.ts }, ...a].slice(0, 40));
         if (REFETCH_ON.includes(e.type)) scheduleRefetch();
@@ -240,8 +252,9 @@ export default function BoardProvider({ children }: { children: React.ReactNode 
       boardUrl,
       drawer,
       openStrategy: setDrawer,
+      teamKey,
     }),
-    [state, error, connected, live, feed, pending, name, ready, admin, control, sendMessage, theme, price, view, boardUrl, drawer],
+    [state, error, connected, live, feed, pending, name, ready, admin, control, sendMessage, theme, price, view, boardUrl, drawer, teamKey],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

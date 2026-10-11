@@ -7,6 +7,7 @@ from __future__ import annotations
 import asyncio
 import datetime as dt
 import json
+import time
 
 from bson import ObjectId
 from fastapi import FastAPI, Header, HTTPException
@@ -26,6 +27,14 @@ app.add_middleware(CORSMiddleware, allow_origins=[o.strip() for o in config.WEB_
                    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"], allow_headers=["*"])
 
 ACTIVE: dict = {"loop": None, "task": None}
+
+
+@app.on_event("startup")
+async def _startup():
+    try:
+        await asyncio.to_thread(store.ensure_indexes)
+    except Exception as exc:  # noqa: BLE001 - the board should still come up
+        print(f"[api] could not ensure indexes: {exc}")
 PRESENT_SECS = 30
 
 
@@ -117,6 +126,7 @@ def build_state(run_id: str | None) -> dict:
         "tests_run": (latest or {}).get("tests_run", 0),
         "messages": msgs,
         "people": people,
+        "live_mode": HUB.mode,
         "last_event_id": str(e["_id"]) if (e := d.events.find_one({"run_id": rid}, sort=[("_id", -1)])) else None,
     })
 
@@ -156,67 +166,48 @@ async def results():
     return clean(await aw(board.results))
 
 
-# ---------- schedule your team: the frozen best strategy on a visitor's calendar ----------
-
-class TaskIn(BaseModel):
-    person: int = Field(ge=0)
-    hours: int = Field(ge=1, le=999)
-
-
-class ProjectIn(BaseModel):
-    name: str = Field(default="", max_length=40)
-    tasks: list[TaskIn] = Field(max_length=30)
-
-
-class TimeOffIn(BaseModel):
-    person: int = Field(ge=0)
-    from_: int = Field(alias="from", ge=0, le=99_999)
-    to: int = Field(ge=0, le=99_999)
-
-
-class LateStartIn(BaseModel):
-    project: int = Field(ge=0)
-    hour: int = Field(ge=0, le=99_999)
-
-
-class ScheduleIn(BaseModel):
-    people: list[str] = Field(min_length=1, max_length=30)
-    projects: list[ProjectIn] = Field(min_length=1, max_length=26)
-    time_off: list[TimeOffIn] = Field(default_factory=list, max_length=60)
-    late_starts: list[LateStartIn] = Field(default_factory=list, max_length=26)
-
-
-@app.post("/api/schedule")
-async def post_schedule(body: ScheduleIn):
-    n_p, n_j = len(body.people), len(body.projects)
-    projects = [[(t.person, t.hours) for t in p.tasks] for p in body.projects]
-    if any(not p for p in projects):
-        raise HTTPException(400, "Every project needs at least one task.")
-    if any(m >= n_p for p in projects for m, _ in p):
-        raise HTTPException(400, "A task is assigned to someone who is not on the team.")
-    if any(o.person >= n_p or o.to <= o.from_ for o in body.time_off):
-        raise HTTPException(400, "Time off needs a person on the team and an end hour after the start hour.")
-    if any(ls.project >= n_j for ls in body.late_starts):
-        raise HTTPException(400, "A late start points at a project that does not exist.")
-    inst = board.build_instance(n_p, projects, [(o.person, o.from_, o.to) for o in body.time_off],
-                                [(ls.project, ls.hour) for ls in body.late_starts])
-    try:
-        return clean(await board.schedule(inst))
-    except ValueError as exc:
-        raise HTTPException(422, str(exc)) from exc
-
-
-# ---------- live stream: one poller fans out to every client ----------
+# ---------- live stream: one MongoDB change stream fans out to every client ----------
 
 class Hub:
+    """Watches the `events` collection with a MongoDB change stream (inserts only) and pushes each new
+    event to every connected browser. If change streams are unavailable it falls back to polling by _id,
+    so the board keeps working either way. One watcher serves all viewers."""
+
     def __init__(self):
         self.subs: set[asyncio.Queue] = set()
         self.task: asyncio.Task | None = None
         self.last_id: ObjectId | None = None
+        self.mode = "starting"   # "change_stream" | "polling"; shown in /api/state
 
-    async def run(self):
-        last = await aw(lambda: store.db().events.find_one(sort=[("_id", -1)]))
-        self.last_id = last["_id"] if last else ObjectId.from_datetime(store.now())
+    def publish(self, e: dict):
+        if self.last_id and e["_id"] <= self.last_id:
+            return  # already sent (resume overlap)
+        self.last_id = e["_id"]
+        payload = json.dumps(clean(e))
+        for q in list(self.subs):
+            if q.qsize() < 1000:
+                q.put_nowait(payload)
+
+    def _watch(self, loop: asyncio.AbstractEventLoop):
+        """Blocking change-stream loop, run in a worker thread. Resumes after transient errors."""
+        resume = None
+        failures = 0
+        while failures < 3:
+            try:
+                pipeline = [{"$match": {"operationType": "insert"}}]
+                with store.db().events.watch(pipeline, resume_after=resume) as cs:
+                    self.mode = "change_stream"
+                    failures = 0
+                    for change in cs:
+                        resume = cs.resume_token
+                        loop.call_soon_threadsafe(self.publish, change["fullDocument"])
+            except Exception as exc:  # noqa: BLE001
+                failures += 1
+                print(f"[hub] change stream error ({failures}/3): {exc}")
+                time.sleep(2)
+        raise RuntimeError("change streams unavailable")
+
+    async def _poll(self):
         while True:
             try:
                 new = await aw(lambda: list(store.db().events.find({"_id": {"$gt": self.last_id}}).sort("_id", 1).limit(500)))
@@ -225,12 +216,19 @@ class Hub:
                 await asyncio.sleep(3)
                 continue
             for e in new:
-                self.last_id = e["_id"]
-                payload = json.dumps(clean(e))
-                for q in list(self.subs):
-                    if q.qsize() < 1000:
-                        q.put_nowait(payload)
+                self.publish(e)
             await asyncio.sleep(1.0)
+
+    async def run(self):
+        last = await aw(lambda: store.db().events.find_one(sort=[("_id", -1)]))
+        self.last_id = last["_id"] if last else ObjectId.from_datetime(store.now())
+        if config.MONGODB_URI != "mock":
+            try:
+                await asyncio.to_thread(self._watch, asyncio.get_running_loop())
+            except Exception as exc:  # noqa: BLE001
+                print(f"[hub] falling back to polling: {exc}")
+        self.mode = "polling"
+        await self._poll()
 
     def subscribe(self) -> asyncio.Queue:
         if self.task is None or self.task.done():
@@ -350,6 +348,118 @@ async def run_stop(x_admin_token: str | None = Header(default=None)):
         loop.stop_requested = True
         loop.resume_evt.set()
     return {"ok": True}
+
+
+# ---------- schedule your team (uses the frozen best strategy; never tunes anything) ----------
+
+SCHEDULE_LOCK = asyncio.Semaphore(1)  # one at a time: keep CPU free for live runs
+_best_code: dict = {}
+
+
+def best_strategy() -> dict:
+    """The strategy scored by final_eval (frozen), else the latest finished run's best."""
+    if not _best_code:
+        sid = None
+        lock = config.DATA / "final_eval.json"
+        if lock.exists():
+            sid = json.loads(lock.read_text())["strategy_id"]
+        else:
+            run = store.db().runs.find_one({"tag": None, "status": "finished"}, sort=[("started_at", -1)])
+            sid = run and run.get("best_strategy_id")
+        doc = sid and store.db().strategies.find_one({"_id": sid}, {"code": 1, "bot": 1, "practice_gap": 1})
+        if not doc:
+            raise HTTPException(503, "no trained strategy available yet")
+        _best_code.update(id=doc["_id"], code=doc["code"], bot=doc["bot"], gap=doc.get("practice_gap"))
+    return _best_code
+
+
+class TaskIn(BaseModel):
+    project: str = Field(min_length=1, max_length=60)
+    person: str = Field(min_length=1, max_length=60)
+    hours: int
+
+
+class DowntimeIn(BaseModel):
+    person: str
+    start: int
+    end: int
+
+
+class ReleaseIn(BaseModel):
+    project: str
+    at: int
+
+
+class ScheduleIn(BaseModel):
+    tasks: list[TaskIn]
+    downtime: list[DowntimeIn] = []
+    release: list[ReleaseIn] = []
+
+
+@app.post("/api/schedule")
+async def schedule_team(body: ScheduleIn):
+    from engine.jobs import get_job
+    from engine.jobs.jobshop.custom import build_instance
+    from engine.runner.core import run_child
+
+    job = get_job("jobshop")
+    try:
+        inst, people, projects = build_instance([t.model_dump() for t in body.tasks],
+                                                [d.model_dump() for d in body.downtime],
+                                                [r.model_dump() for r in body.release])
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from None
+    best = await aw(best_strategy)
+    tl = config.TIME_LIMIT_S
+    args = job.call_args(inst, tl)
+    async with SCHEDULE_LOCK:
+        fcfs_res, bot_res = await asyncio.gather(
+            aw(run_child, job.baselines()["fcfs"], job.entrypoint, args, tl),
+            aw(run_child, best["code"], job.entrypoint, args, tl))
+    out = {}
+    for name, res in (("fcfs", fcfs_res), ("bot", bot_res)):
+        if "error" in res or res.get("secs", 0) > 2.5 * tl:
+            raise HTTPException(500, f"{name} failed: {res.get('error', 'too slow')}")
+        try:
+            out[name] = job.showcase(inst, res["output"])
+        except ValueError as exc:
+            raise HTTPException(500, f"{name} produced an invalid schedule: {exc}") from None
+    f, b = out["fcfs"]["makespan"], out["bot"]["makespan"]
+    kept_simple = b > f  # the strategy is a heuristic; never hand the user a worse plan than the simple one
+    if kept_simple:
+        out["bot"], b = out["fcfs"], f
+    doc = {
+        "ts": store.now(), "start": next_workday_start(), "hours_per_day": HOURS_PER_DAY,
+        "input": body.model_dump(),
+        "people": people, "projects": projects,
+        "fcfs": out["fcfs"], "bot": out["bot"],
+        "hours_saved": f - b, "pct_shorter": round(100 * (f - b) / f, 1) if f else 0.0,
+        "kept_simple": kept_simple,
+        "strategy": {"id": best["id"], "bot": best["bot"]},
+    }
+    # shared: every board shows the latest team calendar (pushed to them by the change stream)
+    await aw(store.db().team_schedules.insert_one, doc)
+    await aw(store.emit, "team_scheduled", None, {"hours_saved": f - b, "people": len(people),
+                                                   "projects": len(projects)}, None)
+    return clean(doc)
+
+
+@app.get("/api/team-schedule")
+async def latest_team_schedule():
+    doc = await aw(lambda: store.db().team_schedules.find_one(sort=[("ts", -1)]))
+    return clean(doc) if doc else None
+
+
+HOURS_PER_DAY = 8  # working hours per day; the calendar runs 9:00-17:00 on weekdays
+
+
+def next_workday_start() -> str:
+    """The next weekday morning at 9:00 (local time of the server), as ISO; the plan's hour 0."""
+    now = dt.datetime.now().astimezone()
+    d = now + dt.timedelta(days=1)
+    while d.weekday() >= 5:
+        d += dt.timedelta(days=1)
+    return d.replace(hour=9, minute=0, second=0, microsecond=0).isoformat()
 
 
 # ---------- Rally (must be mounted before the catch-all below) ----------

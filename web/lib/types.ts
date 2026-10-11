@@ -139,7 +139,7 @@ export type LineageNode = {
 
 /** GET /api/results: read from data/*.json and the main run, never recomputed. */
 export type Results = {
-  final: { set: "held_out" | "fresh" | "events"; label: string; detail: string; baseline_gap: number; team_gap: number; shorter_pct: number; gap_closed_pct: number | null; gap_closed_vs_fcfs_pct: number | null }[];
+  final: { set: "held_out" | "fresh" | "events"; label: string; detail: string; baseline_gap: number; team_gap: number; shorter_pct: number | null; gap_closed_pct: number | null; gap_closed_vs_fcfs_pct: number | null }[];
   final_eval_ts: string | null;
   splits_commit: string | null;
   strategy_id: string | null;
@@ -152,19 +152,26 @@ export type Results = {
   approaches: { family: string; first_tried: string; best: string; fate: string }[];
 };
 
-/** POST /api/schedule: runs the frozen best strategy, never tunes. */
-export type ScheduleRequest = {
-  people: string[];
-  projects: { name: string; tasks: { person: number; hours: number }[] }[];
-  time_off: { person: number; from: number; to: number }[];
-  late_starts: { project: number; hour: number }[];
+/** POST /api/schedule body: tasks in order within each project, people and projects by name. */
+export type ScheduleInput = {
+  tasks: { project: string; person: string; hours: number }[];
+  downtime: { person: string; start: number; end: number }[];
+  release: { project: string; at: number }[];
 };
-export type Plan = { makespan: number; rows: [number, number, number, number][][] };
-export type ScheduleResponse = {
-  fcfs: Plan;
-  team: Plan;
-  fallback: boolean;
-  error: string | null;
-  strategy: { id: string | null; bot: string; round: number; final: boolean };
-  secs: number;
+/** POST /api/schedule and GET /api/team-schedule: the latest plan, shared by every viewer. Runs the frozen best strategy, never tunes. */
+export type TeamSchedule = {
+  ts: string;
+  /** hour 0 of the plan: the next working morning, 9:00 */
+  start: string;
+  hours_per_day: number;
+  input: ScheduleInput;
+  people: string[];
+  projects: string[];
+  fcfs: Showcase;
+  bot: Showcase;
+  hours_saved: number;
+  pct_shorter: number;
+  /** the strategy did no better than first come, first served, so that plan was kept */
+  kept_simple: boolean;
+  strategy: { id: string; bot: string };
 };

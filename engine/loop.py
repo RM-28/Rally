@@ -43,8 +43,11 @@ def rank_key(s: dict):
 class RunLoop:
     def __init__(self, job_name: str = "jobshop", n_bots: int = config.N_BOTS, rounds: int = 5,
                  runner: str | None = None, time_limit: float | None = None, repeats: int | None = None,
-                 tag: str | None = None):
+                 tag: str | None = None, customer_id: str | None = None,
+                 budget_s: float | None = None):
         self.job_name = job_name
+        self.customer_id = customer_id  # billed customer; None for admin/internal runs
+        self.budget_s = budget_s        # optional wall-clock budget: no new round starts after it
         self.job = get_job(job_name)
         self.n_bots = n_bots
         self.rounds = rounds
@@ -170,16 +173,20 @@ class RunLoop:
         await aw(store.ensure_indexes)
         await aw(store.db().runs.insert_one, {
             "_id": self.run_id, "job": self.job_name, "n_bots": self.n_bots, "rounds_planned": self.rounds,
-            "started_at": store.now(), "status": "running", "tag": self.tag,
+            "started_at": store.now(), "status": "running", "tag": self.tag, "customer_id": self.customer_id,
             "splits_commit": git_commit_of("data/splits.json"),
             "time_limit": self.time_limit, "repeats": self.repeats, "runner": self.runner or config.RUNNER,
         })
         self.log(f"started: {self.n_bots} bots, {self.rounds} rounds, runner={self.runner or config.RUNNER}")
         try:
             await self.round_zero()
+            t_start = time.monotonic()
             for n in range(1, self.rounds + 1):
                 await self.resume_evt.wait()
                 if self.stop_requested:
+                    break
+                if self.budget_s and time.monotonic() - t_start >= self.budget_s:
+                    self.log(f"time budget of {self.budget_s:.0f}s used, stopping before round {n}")
                     break
                 self.round_n = n
                 await self.round(n)

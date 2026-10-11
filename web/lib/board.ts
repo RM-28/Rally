@@ -105,6 +105,8 @@ export function describe(e: LiveEvent): string | null {
       return "Run paused";
     case "resumed":
       return "Run resumed";
+    case "team_scheduled":
+      return `Someone planned a team: ${d.hours_saved} h sooner than first come, first served`;
     case "final_result":
       return "Final exam result is in";
     default:
