@@ -64,26 +64,37 @@
       "best_practice_gap_pct": 25.91,
       "check_gap_pct": 32.096,
       "cloudwatch": {
-        "invocations": 145,
+        "invocations": 186,
         "errors": 0,
         "throttles": 0,
         "peak_concurrency": 10,
-        "duration_sum_s": 120.4,
+        "duration_sum_s": 175.1,
         "duration_max_s": 4.91,
-        "gb_seconds": 240.9
+        "billed_duration_sum_s": 175.9,
+        "gb_seconds_billed": 351.7,
+        "source": "CloudWatch metrics re-pulled after settling, cross-checked against REPORT lines in the function's logs",
+        "invocation_breakdown": {
+          "round0_baselines": 42,
+          "practice": 120,
+          "check": 6,
+          "quick_checks": 18
+        }
       }
     },
-    "note": "wall time is mostly LLM calls; bots write different code each run, so gaps differ by run, not by runner. Rejected attempts were strategy bugs (e.g. missing import), not runner failures."
+    "note": "wall time is mostly LLM calls; bots write different code each run, so gaps differ by run, not by runner. Rejected attempts were strategy bugs (e.g. missing import), not runner failures. Lambda duration is summed compute across invocations; it is unrelated to the round's wall time."
   },
   "aws_cost_usd": {
-    "method": "CloudWatch usage x us-east-1 list prices (Cost Explorer lags ~24h)",
-    "lambda_invocations_total": 227,
-    "lambda_gb_seconds_total": 246.9,
-    "lambda": 0.00416,
+    "method": "billed duration from Lambda REPORT logs x us-east-1 list prices (Cost Explorer lags ~24h)",
+    "lambda_invocations_total": 268,
+    "lambda": 0.00606,
     "s3_artifacts": 1.6e-05,
-    "cloudwatch_api": 0.00016,
-    "total": 0.0043,
+    "total": 0.0066,
     "expected_billed": 0.0,
-    "expected_billed_note": "should fall inside the Lambda free tier (400k GB-s, 1M requests per month)"
-  }
+    "expected_billed_note": "should fall inside the Lambda free tier (400k GB-s, 1M requests per month)",
+    "lambda_gb_seconds_billed_total": 360.1,
+    "cloudwatch_api_and_logs_insights": 0.0005
+  },
+  "corrections": [
+    "2026-10-12: first CloudWatch pull for the round ran before the last minute settled (145 invocations, 120.4 s); settled values are 186 invocations, 175.1 s."
+  ]
 }

@@ -238,10 +238,11 @@ Measured on 2026-10-12 in us-east-1 (raw numbers in `data/lambda_vs_local.json`)
 | Baseline scores | | identical to local on every instance |
 | One 8-bot round (`engine.loop --rounds 1 --bots 8`) | 131.9 s | 120.4 s |
 | Round: tests run / proposals scored | 524 / 8 of 8 | 522 / 8 of 8 |
-| Round: Lambda invocations, errors, throttles | — | 145, 0, 0 |
+| Round: Lambda invocations, errors, throttles | — | 186, 0, 0 |
+| Round: Lambda compute (sum over invocations) | — | 175 s billed, 352 GB-s |
 | Round: peak concurrency | — | 10 (the account limit) |
 
-A round's wall time is mostly LLM calls, so Lambda only trims it here; the gain grows with more bots, repeats or a higher concurrency limit. New accounts are capped at 10 concurrent executions: with the old 64-in-flight client, 11 of 46 baseline calls were throttled, so the client now keeps at most `LAMBDA_MAX_CONCURRENCY` (default 10) in flight. All of the above (227 invocations, about 247 GB-seconds) costs about $0.004 at list price, inside the monthly free tier. Using an `aws login` session locally needs `pip install "botocore[crt]"`.
+A round's wall time is mostly LLM calls, so Lambda only trims it here; the gain grows with more bots, repeats or a higher concurrency limit. New accounts are capped at 10 concurrent executions: with the old 64-in-flight client, 11 of 46 baseline calls were throttled, so the client now keeps at most `LAMBDA_MAX_CONCURRENCY` (default 10) in flight. All of the above (268 invocations, 360 billed GB-seconds from the Lambda REPORT logs) costs about $0.007 at list price, inside the monthly free tier. Using an `aws login` session locally needs `pip install "botocore[crt]"`.
 
 ## Layout
 
