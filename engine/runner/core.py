@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import ast
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -46,8 +47,9 @@ def check_strategy(code: str, entrypoint: str) -> str | None:
 def run_child(code: str, entrypoint: str, args: dict, time_limit: float) -> dict:
     payload = json.dumps({"code": code, "entrypoint": entrypoint, "args": args})
     try:
+        # only PATH: the child must not see API keys, AWS credentials or anything else in our env
         proc = subprocess.run([sys.executable, "-I", CHILD], input=payload, capture_output=True,
-                              text=True, timeout=3 * time_limit + 5)
+                              text=True, timeout=3 * time_limit + 5, env={"PATH": os.environ.get("PATH", "")})
     except subprocess.TimeoutExpired:
         return {"error": "timeout"}
     lines = [ln for ln in proc.stdout.splitlines() if ln.strip()]
