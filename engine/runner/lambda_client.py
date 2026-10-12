@@ -48,7 +48,14 @@ def run_batch(job_name: str, strategies: dict[str, str], instance_ids: list[str]
                  "time_limit": time_limit, "repeats": repeats})
             for k, code in strategies.items() for iid in instance_ids]
     out: dict[str, dict[str, dict]] = {k: {} for k in strategies}
+    transport_failures = 0
     with ThreadPoolExecutor(max_workers=64) as pool:
-        for (k, req), (res, _) in zip(reqs, pool.map(lambda kr: _invoke(kr[1]), reqs)):
+        for (k, req), (res, transport_failed) in zip(reqs, pool.map(lambda kr: _invoke(kr[1]), reqs)):
             out[k][req["instance_id"]] = res
+            transport_failures += transport_failed
+    if reqs and transport_failures * 2 > len(reqs):  # Lambda is unreachable, not the strategies failing
+        print(f"[runner] {transport_failures}/{len(reqs)} Lambda invocations failed in transport; "
+              f"running the batch locally", flush=True)
+        from engine.runner.local import run_batch as local_batch
+        return local_batch(job_name, strategies, instance_ids, time_limit, repeats)
     return out
