@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: botteam-runner, the Lambda that runs one strategy on one instance (engine/runner/handler.py).
+
+# Build the code first: bash infra/package_lambda.sh  (fills infra/build/pkg)
+# Deploy with SAM:      sam deploy -t infra/template.yaml --stack-name botteam-runner --capabilities CAPABILITY_NAMED_IAM --resolve-s3 --region us-east-1
+# or plain CloudFormation, see infra/DEPLOY.md.
+
+Resources:
+  RunnerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: botteam-runner
+      CodeUri: build/pkg/
+      Handler: engine.runner.handler.lambda_handler
+      Runtime: python3.12
+      MemorySize: 2048
+      Timeout: 60
+      # SAM's generated role gets AWSLambdaBasicExecutionRole (CloudWatch Logs) and nothing else.
+      # No VPC, no environment variables, no secrets: strategy code runs in here.
+
+  RunnerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/botteam-runner
+      RetentionInDays: 14
+
+  # Attach to whatever calls the runner (the engine's EC2 instance role, or a developer's user).
+  InvokePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: botteam-runner-invoke
+      Description: Allows invoking the botteam-runner Lambda and nothing else.
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: lambda:InvokeFunction
+            Resource: !GetAtt RunnerFunction.Arn
+
+Outputs:
+  FunctionName:
+    Value: !Ref RunnerFunction
+  InvokePolicyArn:
+    Value: !Ref InvokePolicy

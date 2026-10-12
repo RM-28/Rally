@@ -2,6 +2,23 @@
 
 ## Lambda runner (Phase 4)
 
+Preferred: the SAM template `infra/template.yaml` (function, logs-only role, 14-day log group, invoke policy).
+
+```bash
+bash infra/package_lambda.sh
+sam deploy -t infra/template.yaml --stack-name botteam-runner \
+  --capabilities CAPABILITY_NAMED_IAM --resolve-s3 --region us-east-1
+# without the SAM CLI, plain CloudFormation runs the same template (needs any S3 bucket for the code):
+aws cloudformation package --template-file infra/template.yaml --s3-bucket <BUCKET> \
+  --output-template-file infra/build/packaged.yaml --region us-east-1
+aws cloudformation deploy --template-file infra/build/packaged.yaml --stack-name botteam-runner \
+  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND --region us-east-1
+```
+
+Attach the `botteam-runner-invoke` policy to the caller (EC2 instance role or a developer's user).
+
+By hand, without CloudFormation:
+
 ```bash
 bash infra/package_lambda.sh
 # one-time: an execution role with ONLY AWSLambdaBasicExecutionRole (logs). No VPC, no env vars, no secrets.
