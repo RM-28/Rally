@@ -1,8 +1,12 @@
-# Bot Team
+# Rally
 
-A team of AI bots that works on a hard optimization problem in parallel, gets measurably better every round, and can be steered live by the people watching.
+Rally is a shared workspace where people and AI agents work together: rooms to talk in, agents that write docs, plan calendars, fill a task board and hand work to each other, and approvals that keep a person in charge of what the agents do.
 
-Built at c0mpiled-15 (Penn State, Oct 11 2026) for Track 1A. Every bot runs on **DeepSeek-V4.1-Flash hosted on Luminal Cloud**.
+Inside Rally runs **Bot Team**: a team of AI bots that works on a hard optimization problem in parallel, gets measurably better every round, and can be steered live by the people watching. Its best strategy schedules your real team's calendar.
+
+Built at c0mpiled-15 (Penn State, Oct 11 2026). Every bot and agent runs on **DeepSeek-V4.1-Flash hosted on Luminal Cloud**.
+
+The sections below cover Bot Team first (how it works, the results, how to run it), then [the Rally workspace](#the-rally-workspace).
 
 ## How the scheduling works
 
@@ -219,6 +223,18 @@ Other scripts:
 | `python -m engine.scripts.solver_ref` | CP-SAT reference scores for generated instances |
 | `python -m engine.jobs.jobshop.generate` | fresh + event instances and `data/splits.json` |
 
+## The Rally workspace
+
+The rest of the app around Bot Team. Open `http://localhost:3000/rooms` once the API and board are running (see [Run it](#run-it)); the first visit seeds a test workspace in your browser's time zone.
+
+- **Rooms.** Group chats where people and agents talk. Mention an agent with `@` to hand it a task; agents can also hand parts of the work to each other.
+- **Agents.** Four seeded agents: Scout and Quill for research and writing, Relay and Tally for operations. Each has a role, an autonomy level and permissions you can change, and you can add your own.
+- **What an agent produces.** A reply, a list of findings, a written doc (shown as a file card), a calendar event, task cards for the board, or a remembered preference you can undo.
+- **Approvals and safety.** Calendar events and tasks are done right away, sent to Approvals, or refused, depending on the agent's autonomy, its permissions and the workspace safety switches.
+- **Calendar, board, routines and activity.** A shared calendar, a task board, routines that run an agent on a cron schedule in studio time (`RALLY_TZ`), and an activity log of everything that happened.
+
+Rally has no outside integrations (no email, phone or third-party apps) and no sign-in yet: the caller names themselves with the `X-Rally-User` header. Its data lives in MongoDB in `rally_*` collections, separate from Bot Team's, and updates reach every open page over server-sent events. `python -m engine.rally.seed --reset` wipes the workspace so the next page load seeds it again.
+
 ## Running on AWS Lambda
 
 `RUNNER=lambda` sends every (strategy, instance) test to the `botteam-runner` function instead of local processes. `infra/template.yaml` (AWS SAM) defines it: Python 3.12, 2048 MB, 60 s, a role that can only write to the function's own log group, 14-day log retention, and a `botteam-runner-invoke` policy (`lambda:InvokeFunction` on this function only) to attach to whatever calls it.
@@ -257,7 +273,9 @@ engine/
   jobs/             plug-in interface; jobshop/ implements it (decoder, baselines, brief)
   runner/           sandboxed child process, local pool, AWS Lambda handler + client
   scripts/          ping, baseline, solver_ref, compare_bots, final_eval
-web/                Next.js board (bot tiles, score chart, calendar, playbook, messages)
+  rally/            the Rally workspace API (/api/rally): rooms, agents, approvals, calendar, routines
+web/                Next.js: app/(board) is the Bot Team board (bot tiles, score chart, calendar, playbook,
+                    messages); app/(rally) is the Rally workspace
 infra/              Lambda packaging and deploy notes
 data/               splits, generated instances, references, results
 ```
