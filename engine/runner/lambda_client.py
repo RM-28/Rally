@@ -16,19 +16,30 @@ def _client():
                         config=Config(read_timeout=90, max_pool_connections=64, retries={"max_attempts": 0}))
 
 
-def _invoke(req: dict) -> dict:
+def _failed(req: dict, error: str) -> dict:
+    return {"instance_id": req["instance_id"], "runs": [{"error": error}] * req["repeats"]}
+
+
+def _invoke(req: dict) -> tuple[dict, bool]:
+    """Returns (response, transport_failed). Retries once on a transport error only: a timed-out
+    invocation or a function/strategy error would just fail (or time out) again."""
+    from botocore.exceptions import ConnectionError as BotoConnectionError, HTTPClientError, ReadTimeoutError
     last = None
-    for _ in range(2):  # retry once on a transport error, never on a strategy error
+    for _ in range(2):
         try:
             resp = _client().invoke(FunctionName=config.LAMBDA_FUNCTION_NAME, Payload=json.dumps(req).encode())
             body = json.loads(resp["Payload"].read())
-            if resp.get("FunctionError"):
-                last = body.get("errorMessage", "lambda function error")
-                continue
-            return body
-        except Exception as exc:  # noqa: BLE001
+        except ReadTimeoutError as exc:  # the call went out and the function ran too long
+            return _failed(req, f"timeout: {exc}"), False
+        except (BotoConnectionError, HTTPClientError) as exc:
             last = f"{type(exc).__name__}: {exc}"
-    return {"instance_id": req["instance_id"], "runs": [{"error": f"transport: {last}"}] * req["repeats"]}
+            continue
+        except Exception as exc:  # noqa: BLE001
+            return _failed(req, f"lambda: {type(exc).__name__}: {exc}"), False
+        if resp.get("FunctionError"):  # includes Lambda's own "Task timed out"
+            return _failed(req, f"lambda: {body.get('errorMessage', 'function error')}"), False
+        return body, False
+    return _failed(req, f"transport: {last}"), True
 
 
 def run_batch(job_name: str, strategies: dict[str, str], instance_ids: list[str],
@@ -38,6 +49,6 @@ def run_batch(job_name: str, strategies: dict[str, str], instance_ids: list[str]
             for k, code in strategies.items() for iid in instance_ids]
     out: dict[str, dict[str, dict]] = {k: {} for k in strategies}
     with ThreadPoolExecutor(max_workers=64) as pool:
-        for (k, req), res in zip(reqs, pool.map(lambda kr: _invoke(kr[1]), reqs)):
+        for (k, req), (res, _) in zip(reqs, pool.map(lambda kr: _invoke(kr[1]), reqs)):
             out[k][req["instance_id"]] = res
     return out
