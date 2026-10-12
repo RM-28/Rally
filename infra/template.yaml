@@ -16,14 +16,34 @@ Resources:
       Runtime: python3.12
       MemorySize: 2048
       Timeout: 60
-      # SAM's generated role gets AWSLambdaBasicExecutionRole (CloudWatch Logs) and nothing else.
-      # No VPC, no environment variables, no secrets: strategy code runs in here.
+      Role: !GetAtt RunnerRole.Arn
+      # No environment variables, no secrets: untrusted strategy code runs in here.
 
   RunnerLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: /aws/lambda/botteam-runner
       RetentionInDays: 14
+
+  # Strategy code can read this role's credentials (the runtime's /proc environ), so it may only write
+  # to the function's own log group, not create or write log groups elsewhere in the account.
+  RunnerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: own-log-group-only
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !GetAtt RunnerLogGroup.Arn
 
   # Attach to whatever calls the runner (the engine's EC2 instance role, or a developer's user).
   InvokePolicy:
