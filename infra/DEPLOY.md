@@ -16,6 +16,8 @@ aws cloudformation deploy --template-file infra/build/packaged.yaml --stack-name
 ```
 
 Attach the `botteam-runner-invoke` policy to the caller (EC2 instance role or a developer's user).
+Strategy code is untrusted: on any machine holding secrets set `RUNNER=lambda` and `ALLOW_LOCAL_RUNNER=0`
+(`infra/ec2_setup.sh` puts both in the systemd unit), so strategies never run on that machine.
 
 By hand, without CloudFormation:
 
@@ -44,7 +46,7 @@ Quick path (about 15 minutes):
 
 1. EC2 console, Launch instance: Ubuntu 24.04, `t3.medium` (`c7i.xlarge` if `RUNNER=local`, since tests run
    on the box's CPUs), a key pair, security group allowing 22 (your IP), 80 and 443 (anywhere).
-   If `RUNNER=lambda`, attach an instance role allowed to `lambda:InvokeFunction` on `botteam-runner`.
+   Attach an instance role with the `botteam-runner-invoke` policy: the service runs strategies on Lambda only.
    Optional but wise: allocate an Elastic IP so the address survives a stop/start.
 2. Get the code and env onto the box:
    ```bash

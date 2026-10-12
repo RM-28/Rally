@@ -221,7 +221,9 @@ Other scripts:
 
 ## Running on AWS Lambda
 
-`RUNNER=lambda` sends every (strategy, instance) test to the `botteam-runner` function instead of local processes. `infra/template.yaml` (AWS SAM) defines it: Python 3.12, 2048 MB, 60 s, a role with only CloudWatch Logs, 14-day log retention, and a `botteam-runner-invoke` policy (`lambda:InvokeFunction` on this function only) to attach to whatever calls it.
+`RUNNER=lambda` sends every (strategy, instance) test to the `botteam-runner` function instead of local processes. `infra/template.yaml` (AWS SAM) defines it: Python 3.12, 2048 MB, 60 s, a role that can only write to the function's own log group, 14-day log retention, and a `botteam-runner-invoke` policy (`lambda:InvokeFunction` on this function only) to attach to whatever calls it.
+
+**Why strategies run here in production.** `check_strategy` is an AST denylist: it stops the known tricks (private and frame attributes, reflection builtins, dunder strings) but cannot prove code safe. So the machine that holds secrets never runs strategy code: on EC2 the service sets `RUNNER=lambda` and `ALLOW_LOCAL_RUNNER=0`, which makes local runs raise and turns off the local fallback; the board's showcase and `/api/schedule` go through the same runner. Inside Lambda a strategy that slips past the check sees no `.env`, no instance metadata, and only `PATH` in its environment; the one credential it could find, the function's own role, can only append to this function's log group. It does still have outbound internet; closing that needs the function in a VPC with no internet route.
 
 ```bash
 bash infra/package_lambda.sh                                  # fills infra/build/pkg
