@@ -30,6 +30,8 @@ AWS_REGION = _env("AWS_REGION", "us-east-1")
 LAMBDA_FUNCTION_NAME = _env("LAMBDA_FUNCTION_NAME", "botteam-runner")
 LAMBDA_MAX_CONCURRENCY = int(_env("LAMBDA_MAX_CONCURRENCY", "10"))  # invocations in flight; keep <= account limit
 RUNNER = _env("RUNNER", "local")
+# 0 on any machine holding secrets (the EC2 engine): strategy code then only ever runs on Lambda
+ALLOW_LOCAL_RUNNER = _env("ALLOW_LOCAL_RUNNER", "1") == "1"
 TIME_LIMIT_S = float(_env("TIME_LIMIT_S", "2.0"))
 REPEATS = int(_env("REPEATS", "3"))
 N_BOTS = int(_env("N_BOTS", "4"))
