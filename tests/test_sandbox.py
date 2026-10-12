@@ -48,6 +48,26 @@ ESCAPES = {
     "relative import": "from . import x\ndef solve(**kw):\n    return 1\n",
     "eval": "def solve(**kw):\n    return eval('1')\n",
     "open": "def solve(**kw):\n    return open('.env').read()\n",
+    # frame walking: reported against the denylist that only covered _-prefixed attributes
+    "generator frame builtins": (
+        "def solve(jobs, n_machines, time_limit, release=None, downtime=None):\n"
+        "    b = (i for i in [0]).gi_frame.f_builtins\n"
+        "    os = b['__import__']('os')\n"
+        "    return os.listdir('/')\n"),
+    "generator frame, built key": (
+        "def solve(**kw):\n    b = (i for i in [0]).gi_frame.f_builtins\n    return b['_' * 2 + 'import__']\n"),
+    "frame globals": "def solve(**kw):\n    g = (i for i in [0]).gi_frame.f_globals\n    return g\n",
+    "frame f_back": "def solve(**kw):\n    return (i for i in [0]).gi_frame.f_back\n",
+    "coroutine frame": "async def c():\n    pass\ndef solve(**kw):\n    return c().cr_frame.f_builtins\n",
+    "traceback frame": ("def solve(**kw):\n    try:\n        1 / 0\n    except ZeroDivisionError as e:\n"
+                        "        return e.with_traceback(None).tb_frame\n"),
+    "match class pattern": (
+        "from collections.abc import Hashable, Generator\n"
+        "def solve(**kw):\n    match (i for i in [0]):\n        case Generator(gi_frame=f):\n"
+        "            match f:\n                case Hashable(f_builtins=b):\n                    return b\n"),
+    "aliased attrgetter": "from operator import attrgetter as g\ndef solve(**kw):\n    return g('gi_frame')\n",
+    "dunder string subscript": "def solve(d, **kw):\n    return d['__import__']\n",
+    "dunder string get": "def solve(d, **kw):\n    return d.get('__builtins__')\n",
 }
 
 # PATH is all the parent passes; on Linux, Python sets LC_CTYPE itself when started with no locale (PEP 538)
@@ -64,6 +84,13 @@ def test_normal_strategy_passes_check_and_runs():
     res = run_child(NORMAL, "solve", ARGS, 1.0)
     assert "error" not in res, res
     assert sorted(res["output"]) == sorted(j for j in range(6) for _ in range(6))
+
+
+def test_main_guard_and_user_attributes_still_pass():
+    code = ("class Node:\n    def __init__(self):\n        self.f_cost = 0\n"
+            "def solve(**kw):\n    return [Node().f_cost]\n"
+            "if __name__ == '__main__':\n    print(solve())\n")
+    assert check_strategy(code, "solve") is None
 
 
 def test_shipped_baselines_still_pass_the_check():

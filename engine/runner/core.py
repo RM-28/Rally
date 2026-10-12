@@ -15,10 +15,26 @@ CHILD = str(Path(__file__).resolve().parent / "child.py")
 BANNED_CALLS = {"__import__", "eval", "exec", "compile", "open", "input", "breakpoint", "globals", "vars",
                 "getattr", "setattr", "delattr", "type", "object", "__builtins__",
                 "attrgetter", "methodcaller"}  # operator.attrgetter("_x") is getattr with a built string
+# frames, generators, coroutines, tracebacks and code objects: (x for x in []).gi_frame.f_builtins is __import__
+BANNED_ATTRS = {
+    "gi_frame", "gi_code", "gi_yieldfrom", "cr_frame", "cr_code", "cr_await", "cr_origin",
+    "ag_frame", "ag_code", "ag_await",
+    "f_back", "f_builtins", "f_globals", "f_locals", "f_code", "f_trace", "f_generator",
+    "tb_frame", "tb_next", "co_code", "co_consts", "co_names",
+}
+
+
+def _attr_error(attr: str) -> str | None:
+    if attr.startswith("_"):
+        return f"private attribute '{attr}' is not allowed"
+    if attr in BANNED_CALLS or attr in BANNED_ATTRS:
+        return f"use of '{attr}' is not allowed"
+    return None
 
 
 def check_strategy(code: str, entrypoint: str) -> str | None:
-    """Returns an error message, or None if the strategy passes the static check."""
+    """Returns an error message, or None if the strategy passes the static check.
+    A denylist, so a best effort: the child process is the boundary that has to hold (see run_child)."""
     if len(code.encode()) > MAX_STRATEGY_BYTES:
         return f"file is {len(code.encode())} bytes, limit is {MAX_STRATEGY_BYTES}"
     try:
@@ -33,12 +49,20 @@ def check_strategy(code: str, entrypoint: str) -> str | None:
         elif isinstance(node, ast.ImportFrom):
             if node.level or (node.module or "").split(".")[0] not in ALLOWED_IMPORTS:
                 return f"import from '{node.module}' is not allowed"
+            for a in node.names:  # `from operator import attrgetter as g` hides the name behind an alias
+                if err := _attr_error(a.name):
+                    return err
         elif isinstance(node, ast.Name) and node.id in BANNED_CALLS:
             return f"use of '{node.id}' is not allowed"
-        elif isinstance(node, ast.Attribute) and node.attr.startswith("_"):
-            return f"private attribute '{node.attr}' is not allowed"
-        elif isinstance(node, ast.Attribute) and node.attr in BANNED_CALLS:
-            return f"use of '{node.attr}' is not allowed"
+        elif isinstance(node, ast.Attribute) and (err := _attr_error(node.attr)):
+            return err
+        elif isinstance(node, ast.MatchClass):  # `case Hashable(f_builtins=b)` reads an attribute too
+            for attr in node.kwd_attrs:
+                if err := _attr_error(attr):
+                    return err
+        elif (isinstance(node, ast.Constant) and isinstance(node.value, str)
+              and node.value.startswith("__") and node.value != "__main__"):
+            return f"string '{node.value[:30]}' is not allowed"
     if not any(isinstance(n, ast.FunctionDef) and n.name == entrypoint for n in tree.body):
         return f"does not define {entrypoint}() at top level"
     return None
