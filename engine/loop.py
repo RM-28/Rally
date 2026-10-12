@@ -19,7 +19,7 @@ from engine.jobs import get_job
 from engine.jobs.base import gap as gap_of
 from engine.model import call_model, extract_code, extract_json, extract_note
 from engine.runner import run_batch, summarize
-from engine.runner.core import check_strategy, run_child
+from engine.runner.core import check_strategy
 
 FALLBACK_CHANGE = "Make one small improvement of your choice that is not yet in the playbook; say what in the NOTE."
 
@@ -129,12 +129,15 @@ class RunLoop:
             if not hasattr(self.job, "surprise"):
                 return None
             inst, fallback = self.job.surprise(inst), self.showcase_events
-        res = await aw(run_child, code, self.job.entrypoint, self.job.call_args(inst, self.time_limit), self.time_limit)
-        if "error" in res:
-            self.log(f"showcase failed: {res['error']}")
+        iid = inst["id"]  # through run_batch, so RUNNER=lambda keeps strategy code off this machine
+        res = await aw(run_batch, self.job_name, {"s": code}, [iid], self.time_limit, 1, self.runner,
+                       instances={iid: inst}, keep_output=True)
+        run = res["s"][iid]["runs"][0]
+        if "error" in run or "output" not in run:
+            self.log(f"showcase failed: {run.get('error', 'no output returned')}")
             return fallback
         try:
-            return self.job.showcase(inst, res["output"])
+            return self.job.showcase(inst, run["output"])
         except ValueError as exc:
             self.log(f"showcase invalid: {exc}")
             return fallback
