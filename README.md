@@ -193,7 +193,7 @@ Each round:
 
 Humans can message the team from the board. The chief reads messages at the start of the next round and replies in the shared feed. In the main run a viewer asked for tabu search; the chief gave it to Atlas, whose next strategy set the record it kept to the end.
 
-Bot-written code is never imported into the engine or API process: it runs under `python -I` in a subprocess with a hard timeout, after an import allowlist check.
+Bot-written code is never imported into the engine or API process: it runs under `python -I` in a subprocess with a hard timeout, only `PATH` in its environment and (on Linux) memory and CPU limits, after a static check (an import allowlist plus a denylist of known escape routes). The static check is not a sandbox, so in production strategies run only on AWS Lambda (see [Running on AWS Lambda](#running-on-aws-lambda)).
 
 ## Run it
 
@@ -205,6 +205,7 @@ cp .env.example .env      # LUMINAL_API_KEY, LUMINAL_BASE_URL, MONGODB_URI, ADMI
 python -m engine.scripts.ping                        # one Luminal call + one MongoDB write
 python -m engine.scripts.baseline                    # baseline gaps on quick/practice/check
 python -m engine.loop --rounds 10 --bots 8           # a run from the command line
+python -m pytest                                     # tests: sandbox, scoring, Lambda client (no network)
 
 uvicorn engine.api:app --port 8000                   # API + live event stream
 cd web && npm install && npm run dev                 # board on http://localhost:3000
@@ -239,16 +240,19 @@ Rally has no outside integrations (no email, phone or third-party apps) and no s
 
 `RUNNER=lambda` sends every (strategy, instance) test to the `botteam-runner` function instead of local processes. `infra/template.yaml` (AWS SAM) defines it: Python 3.12, 2048 MB, 60 s, a role that can only write to the function's own log group, 14-day log retention, and a `botteam-runner-invoke` policy (`lambda:InvokeFunction` on this function only) to attach to whatever calls it.
 
-**Why strategies run here in production.** `check_strategy` is an AST denylist: it stops the known tricks (private and frame attributes, reflection builtins, dunder strings) but cannot prove code safe. So the machine that holds secrets never runs strategy code: on EC2 the service sets `RUNNER=lambda` and `ALLOW_LOCAL_RUNNER=0`, which makes local runs raise and turns off the local fallback; the board's showcase and `/api/schedule` go through the same runner. Inside Lambda a strategy that slips past the check sees no `.env`, no instance metadata, and only `PATH` in its environment; the one credential it could find, the function's own role, can only append to this function's log group. It does still have outbound internet; closing that needs the function in a VPC with no internet route.
+**Why strategies run here in production.** `check_strategy` is an AST denylist: it stops the known tricks (private and frame attributes, reflection builtins, dunder strings) but cannot prove code safe. So the machine that holds secrets never runs strategy code: on EC2, `infra/ec2_setup.sh` runs the service with `RUNNER=lambda` and `ALLOW_LOCAL_RUNNER=0`, which makes local runs raise and turns off the local fallback; the board's showcase and `/api/schedule` go through the same runner. Inside Lambda a strategy that slips past the check sees no `.env`, no instance metadata, and only `PATH` in its environment; the one credential it could find, the function's own role, can only append to this function's log group. It does still have outbound internet; closing that needs the function in a VPC with no internet route.
 
 ```bash
 bash infra/package_lambda.sh                                  # fills infra/build/pkg
 sam deploy -t infra/template.yaml --stack-name botteam-runner \
   --capabilities CAPABILITY_NAMED_IAM --resolve-s3 --region us-east-1
 aws lambda get-account-settings --query AccountLimit.ConcurrentExecutions   # set LAMBDA_MAX_CONCURRENCY to this or less
+sam delete --stack-name botteam-runner --region us-east-1      # tear it down
 ```
 
-Measured on 2026-10-12 in us-east-1 (raw numbers in `data/lambda_vs_local.json`):
+Deploying the EC2 engine and the Amplify board: [`infra/DEPLOY.md`](infra/DEPLOY.md).
+
+Measured on 2026-10-12 in us-east-1 (raw numbers in `data/lambda_vs_local.json`); the stack was deleted afterwards, so redeploy it before using `RUNNER=lambda`:
 
 | | local | Lambda |
 |---|---|---|
@@ -276,8 +280,9 @@ engine/
   rally/            the Rally workspace API (/api/rally): rooms, agents, approvals, calendar, routines
 web/                Next.js: app/(board) is the Bot Team board (bot tiles, score chart, calendar, playbook,
                     messages); app/(rally) is the Rally workspace
-infra/              Lambda packaging and deploy notes
+infra/              SAM template for the Lambda runner, Lambda packaging, EC2 setup, deploy notes
 data/               splits, generated instances, references, results
+tests/              pytest suite; .github/workflows/tests.yml runs it on Python 3.12
 ```
 
 A new problem is a new folder under `engine/jobs/` implementing the `Job` interface (`brief`, `sets`, `load`, `baselines`, `score`, `reference`, `showcase`). Nothing else in the engine knows about scheduling.
