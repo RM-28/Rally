@@ -11,7 +11,9 @@ from engine.config import ALLOWED_IMPORTS, MAX_STRATEGY_BYTES
 from engine.jobs import get_job
 
 CHILD = str(Path(__file__).resolve().parent / "child.py")
-BANNED_CALLS = {"__import__", "eval", "exec", "compile", "open", "input", "breakpoint", "globals", "vars"}
+BANNED_CALLS = {"__import__", "eval", "exec", "compile", "open", "input", "breakpoint", "globals", "vars",
+                "getattr", "setattr", "delattr", "type", "object", "__builtins__",
+                "attrgetter", "methodcaller"}  # operator.attrgetter("_x") is getattr with a built string
 
 
 def check_strategy(code: str, entrypoint: str) -> str | None:
@@ -32,8 +34,10 @@ def check_strategy(code: str, entrypoint: str) -> str | None:
                 return f"import from '{node.module}' is not allowed"
         elif isinstance(node, ast.Name) and node.id in BANNED_CALLS:
             return f"use of '{node.id}' is not allowed"
-        elif isinstance(node, ast.Attribute) and node.attr.startswith("__") and node.attr.endswith("__"):
-            return f"dunder attribute '{node.attr}' is not allowed"
+        elif isinstance(node, ast.Attribute) and node.attr.startswith("_"):
+            return f"private attribute '{node.attr}' is not allowed"
+        elif isinstance(node, ast.Attribute) and node.attr in BANNED_CALLS:
+            return f"use of '{node.attr}' is not allowed"
     if not any(isinstance(n, ast.FunctionDef) and n.name == entrypoint for n in tree.body):
         return f"does not define {entrypoint}() at top level"
     return None
