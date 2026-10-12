@@ -400,7 +400,7 @@ class ScheduleIn(BaseModel):
 async def schedule_team(body: ScheduleIn):
     from engine.jobs import get_job
     from engine.jobs.jobshop.custom import build_instance
-    from engine.runner.core import run_child
+    from engine.runner import run_batch
 
     job = get_job("jobshop")
     try:
@@ -411,17 +411,17 @@ async def schedule_team(body: ScheduleIn):
         raise HTTPException(400, str(exc)) from None
     best = await aw(best_strategy)
     tl = config.TIME_LIMIT_S
-    args = job.call_args(inst, tl)
-    async with SCHEDULE_LOCK:
-        fcfs_res, bot_res = await asyncio.gather(
-            aw(run_child, job.baselines()["fcfs"], job.entrypoint, args, tl),
-            aw(run_child, best["code"], job.entrypoint, args, tl))
+    iid = inst["id"]
+    async with SCHEDULE_LOCK:  # one batch, so RUNNER=lambda applies here too
+        res = await aw(run_batch, "jobshop", {"fcfs": job.baselines()["fcfs"], "bot": best["code"]}, [iid],
+                       tl, 1, instances={iid: inst}, keep_output=True)
     out = {}
-    for name, res in (("fcfs", fcfs_res), ("bot", bot_res)):
-        if "error" in res or res.get("secs", 0) > 2.5 * tl:
-            raise HTTPException(500, f"{name} failed: {res.get('error', 'too slow')}")
+    for name in ("fcfs", "bot"):
+        run = res[name][iid]["runs"][0]
+        if "error" in run or "output" not in run:
+            raise HTTPException(500, f"{name} failed: {run.get('error', 'no output returned')}")
         try:
-            out[name] = job.showcase(inst, res["output"])
+            out[name] = job.showcase(inst, run["output"])
         except ValueError as exc:
             raise HTTPException(500, f"{name} produced an invalid schedule: {exc}") from None
     f, b = out["fcfs"]["makespan"], out["bot"]["makespan"]
