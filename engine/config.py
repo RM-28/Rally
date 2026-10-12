@@ -28,6 +28,7 @@ MONGODB_URI = _env("MONGODB_URI")
 MONGODB_DB = _env("MONGODB_DB", "botteam")
 AWS_REGION = _env("AWS_REGION", "us-east-1")
 LAMBDA_FUNCTION_NAME = _env("LAMBDA_FUNCTION_NAME", "botteam-runner")
+LAMBDA_MAX_CONCURRENCY = int(_env("LAMBDA_MAX_CONCURRENCY", "10"))  # invocations in flight; keep <= account limit
 RUNNER = _env("RUNNER", "local")
 TIME_LIMIT_S = float(_env("TIME_LIMIT_S", "2.0"))
 REPEATS = int(_env("REPEATS", "3"))

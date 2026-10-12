@@ -55,7 +55,8 @@ def run_batch(job_name: str, strategies: dict[str, str], instance_ids: list[str]
             reqs.append((k, req))
     out: dict[str, dict[str, dict]] = {k: {} for k in strategies}
     transport_failures = 0
-    with ThreadPoolExecutor(max_workers=64) as pool:
+    # never more in flight than the account allows, or Lambda throttles the rest (new accounts: 10)
+    with ThreadPoolExecutor(max_workers=config.LAMBDA_MAX_CONCURRENCY) as pool:
         for (k, req), (res, transport_failed) in zip(reqs, pool.map(lambda kr: _invoke(kr[1]), reqs)):
             out[k][req["instance_id"]] = res
             transport_failures += transport_failed

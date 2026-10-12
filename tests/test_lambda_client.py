@@ -146,3 +146,22 @@ def test_inline_instance_and_keep_output_are_sent(fake, no_local_fallback):
     lambda_client.run_batch("jobshop", {"a": "x"}, ["team"], 1.0, 1, instances={"team": inst}, keep_output=True)
     assert client.calls[0]["instance"] == inst
     assert client.calls[0]["keep_output"] is True
+
+
+def test_never_more_in_flight_than_the_concurrency_cap(fake, no_local_fallback, monkeypatch):
+    from engine import config
+    monkeypatch.setattr(config, "LAMBDA_MAX_CONCURRENCY", 3)
+    state = {"now": 0, "peak": 0}
+    lock = threading.Lock()
+
+    def script(req, attempt):
+        with lock:
+            state["now"] += 1
+            state["peak"] = max(state["peak"], state["now"])
+        time.sleep(0.02)
+        with lock:
+            state["now"] -= 1
+        return ok(req)
+    fake(script)
+    run({"a": "x", "b": "xx"}, [f"i{n}" for n in range(1, 11)])
+    assert state["peak"] == 3
