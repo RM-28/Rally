@@ -8,7 +8,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from engine.config import ALLOWED_IMPORTS, MAX_STRATEGY_BYTES
+from engine.config import ALLOWED_IMPORTS, CHILD_MEMORY_MB, MAX_STRATEGY_BYTES
 from engine.jobs import get_job
 
 CHILD = str(Path(__file__).resolve().parent / "child.py")
@@ -45,7 +45,8 @@ def check_strategy(code: str, entrypoint: str) -> str | None:
 
 
 def run_child(code: str, entrypoint: str, args: dict, time_limit: float) -> dict:
-    payload = json.dumps({"code": code, "entrypoint": entrypoint, "args": args})
+    limits = {"mem_mb": CHILD_MEMORY_MB, "cpu_s": int(3 * time_limit) + 5}  # applied by the child on Linux
+    payload = json.dumps({"code": code, "entrypoint": entrypoint, "args": args, "limits": limits})
     try:
         # only PATH: the child must not see API keys, AWS credentials or anything else in our env
         proc = subprocess.run([sys.executable, "-I", CHILD], input=payload, capture_output=True,

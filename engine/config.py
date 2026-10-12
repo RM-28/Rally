@@ -47,3 +47,4 @@ ALLOWED_IMPORTS = {
     "functools", "bisect", "array", "operator", "copy",
 }
 MAX_STRATEGY_BYTES = 30 * 1024
+CHILD_MEMORY_MB = int(_env("CHILD_MEMORY_MB", "1024"))  # address-space cap per strategy process (Linux only)
