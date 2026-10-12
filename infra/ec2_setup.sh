@@ -42,6 +42,10 @@ Wants=network-online.target
 [Service]
 User=$APP_USER
 WorkingDirectory=$APP_DIR
+# strategy code is untrusted and this box holds .env and an instance role: run it on Lambda only
+# (these override .env; attach the botteam-runner-invoke policy to the instance role)
+Environment=RUNNER=lambda
+Environment=ALLOW_LOCAL_RUNNER=0
 ExecStart=$APP_DIR/.venv/bin/uvicorn engine.api:app --host 127.0.0.1 --port 8000 --workers 1
 Restart=always
 RestartSec=2
