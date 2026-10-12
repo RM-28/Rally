@@ -219,6 +219,30 @@ Other scripts:
 | `python -m engine.scripts.solver_ref` | CP-SAT reference scores for generated instances |
 | `python -m engine.jobs.jobshop.generate` | fresh + event instances and `data/splits.json` |
 
+## Running on AWS Lambda
+
+`RUNNER=lambda` sends every (strategy, instance) test to the `botteam-runner` function instead of local processes. `infra/template.yaml` (AWS SAM) defines it: Python 3.12, 2048 MB, 60 s, a role with only CloudWatch Logs, 14-day log retention, and a `botteam-runner-invoke` policy (`lambda:InvokeFunction` on this function only) to attach to whatever calls it.
+
+```bash
+bash infra/package_lambda.sh                                  # fills infra/build/pkg
+sam deploy -t infra/template.yaml --stack-name botteam-runner \
+  --capabilities CAPABILITY_NAMED_IAM --resolve-s3 --region us-east-1
+aws lambda get-account-settings --query AccountLimit.ConcurrentExecutions   # set LAMBDA_MAX_CONCURRENCY to this or less
+```
+
+Measured on 2026-10-12 in us-east-1 (raw numbers in `data/lambda_vs_local.json`):
+
+| | local | Lambda |
+|---|---|---|
+| Baseline, all sets (`engine.scripts.baseline`) | 1.1 s | 2.0 s, 46 invocations, 0 errors |
+| Baseline scores | | identical to local on every instance |
+| One 8-bot round (`engine.loop --rounds 1 --bots 8`) | 131.9 s | 120.4 s |
+| Round: tests run / proposals scored | 524 / 8 of 8 | 522 / 8 of 8 |
+| Round: Lambda invocations, errors, throttles | — | 145, 0, 0 |
+| Round: peak concurrency | — | 10 (the account limit) |
+
+A round's wall time is mostly LLM calls, so Lambda only trims it here; the gain grows with more bots, repeats or a higher concurrency limit. New accounts are capped at 10 concurrent executions: with the old 64-in-flight client, 11 of 46 baseline calls were throttled, so the client now keeps at most `LAMBDA_MAX_CONCURRENCY` (default 10) in flight. All of the above (227 invocations, about 247 GB-seconds) costs about $0.004 at list price, inside the monthly free tier. Using an `aws login` session locally needs `pip install "botocore[crt]"`.
+
 ## Layout
 
 ```
