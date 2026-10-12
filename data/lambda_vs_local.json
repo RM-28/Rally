@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-12",
+  "region": "us-east-1",
+  "lambda": {
+    "function": "botteam-runner",
+    "runtime": "python3.12",
+    "memory_mb": 2048,
+    "timeout_s": 60,
+    "account_concurrency_limit": 10,
+    "client_max_in_flight": 10
+  },
+  "baseline": {
+    "command": "python -m engine.scripts.baseline --runner {local|lambda}",
+    "sets": [
+      "quick",
+      "practice",
+      "check"
+    ],
+    "wall_s": {
+      "local": 1.13,
+      "lambda": 1.97
+    },
+    "scores_identical": true,
+    "mean_gap_pct": {
+      "fcfs": {
+        "quick": 18.96,
+        "practice": 55.83,
+        "check": 50.815
+      },
+      "simple_rule": {
+        "quick": 36.382,
+        "practice": 26.399,
+        "check": 32.133
+      }
+    },
+    "lambda_cloudwatch": {
+      "invocations": 46,
+      "errors": 0,
+      "throttles": 0,
+      "peak_concurrency": 10
+    },
+    "note": "first lambda attempt with 64 in flight: 11 of 46 throttled (account limit 10); fixed by LAMBDA_MAX_CONCURRENCY"
+  },
+  "bot_round": {
+    "command": "python -m engine.loop --rounds 1 --bots 8 --runner {local|lambda}",
+    "local": {
+      "wall_s": 131.9,
+      "round_s": 127.1,
+      "tests_run": 524,
+      "proposals_scored": "8/8",
+      "rejected_attempts": 2,
+      "infra_errors": 0,
+      "best_practice_gap_pct": 25.483,
+      "check_gap_pct": 31.316,
+      "lambda_invocations": 0
+    },
+    "lambda": {
+      "wall_s": 120.4,
+      "round_s": 113.6,
+      "tests_run": 522,
+      "proposals_scored": "8/8",
+      "rejected_attempts": 1,
+      "infra_errors": 0,
+      "best_practice_gap_pct": 25.91,
+      "check_gap_pct": 32.096,
+      "cloudwatch": {
+        "invocations": 145,
+        "errors": 0,
+        "throttles": 0,
+        "peak_concurrency": 10,
+        "duration_sum_s": 120.4,
+        "duration_max_s": 4.91,
+        "gb_seconds": 240.9
+      }
+    },
+    "note": "wall time is mostly LLM calls; bots write different code each run, so gaps differ by run, not by runner. Rejected attempts were strategy bugs (e.g. missing import), not runner failures."
+  },
+  "aws_cost_usd": {
+    "method": "CloudWatch usage x us-east-1 list prices (Cost Explorer lags ~24h)",
+    "lambda_invocations_total": 227,
+    "lambda_gb_seconds_total": 246.9,
+    "lambda": 0.00416,
+    "s3_artifacts": 1.6e-05,
+    "cloudwatch_api": 0.00016,
+    "total": 0.0043,
+    "expected_billed": 0.0,
+    "expected_billed_note": "should fall inside the Lambda free tier (400k GB-s, 1M requests per month)"
+  }
+}
