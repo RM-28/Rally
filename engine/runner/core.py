@@ -64,23 +64,27 @@ def run_child(code: str, entrypoint: str, args: dict, time_limit: float) -> dict
 
 
 def run_one(job_name: str, code: str, instance_id: str, time_limit: float, repeats: int,
-            instance: dict | None = None) -> dict:
+            instance: dict | None = None, keep_output: bool = False) -> dict:
     """The runner contract: one strategy on one instance, `repeats` times, each in its own process."""
     job = get_job(job_name)
     instance = instance or job.load(instance_id)
     args = job.call_args(instance, time_limit)
     runs = []
     for _ in range(repeats):
-        runs.append(score_child_result(job, instance, run_child(code, job.entrypoint, args, time_limit), time_limit))
+        res = run_child(code, job.entrypoint, args, time_limit)
+        runs.append(score_child_result(job, instance, res, time_limit, keep_output))
     return {"instance_id": instance_id, "runs": runs}
 
 
-def score_child_result(job, instance: dict, res: dict, time_limit: float) -> dict:
+def score_child_result(job, instance: dict, res: dict, time_limit: float, keep_output: bool = False) -> dict:
     if "error" in res:
         return {"error": res["error"]}
     if res["secs"] > 2.5 * time_limit:
         return {"error": f"too slow: {res['secs']:.2f}s", "secs": res["secs"]}
     try:
-        return {"score": job.score(instance, res["output"]), "secs": res["secs"]}
+        run = {"score": job.score(instance, res["output"]), "secs": res["secs"]}
     except ValueError as exc:
         return {"error": f"ValueError: {exc}", "secs": res["secs"]}
+    if keep_output:  # callers that render the result (e.g. /api/schedule) need the raw output too
+        run["output"] = res["output"]
+    return run

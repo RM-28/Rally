@@ -1,15 +1,18 @@
 from engine import config
 
 
-def run_batch(job_name, strategies, instance_ids, time_limit=None, repeats=None, runner=None):
-    """strategies: {key: code} -> {key: {instance_id: {"instance_id", "runs": [...]}}}"""
+def run_batch(job_name, strategies, instance_ids, time_limit=None, repeats=None, runner=None,
+              instances=None, keep_output=False):
+    """strategies: {key: code} -> {key: {instance_id: {"instance_id", "runs": [...]}}}
+    instances: {instance_id: instance} for instances built on the fly (not loadable by id).
+    keep_output: also return each run's raw strategy output."""
     time_limit = config.TIME_LIMIT_S if time_limit is None else time_limit
     repeats = config.REPEATS if repeats is None else repeats
     if (runner or config.RUNNER) == "lambda":
         from engine.runner.lambda_client import run_batch as rb
     else:
         from engine.runner.local import run_batch as rb
-    return rb(job_name, strategies, instance_ids, time_limit, repeats)
+    return rb(job_name, strategies, instance_ids, time_limit, repeats, instances, keep_output)
 
 
 def summarize(job, results: dict[str, dict]) -> dict:

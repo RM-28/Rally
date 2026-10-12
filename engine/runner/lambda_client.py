@@ -43,10 +43,16 @@ def _invoke(req: dict) -> tuple[dict, bool]:
 
 
 def run_batch(job_name: str, strategies: dict[str, str], instance_ids: list[str],
-              time_limit: float, repeats: int) -> dict[str, dict[str, dict]]:
-    reqs = [(k, {"job": job_name, "strategy_code": code, "instance_id": iid,
-                 "time_limit": time_limit, "repeats": repeats})
-            for k, code in strategies.items() for iid in instance_ids]
+              time_limit: float, repeats: int, instances: dict[str, dict] | None = None,
+              keep_output: bool = False) -> dict[str, dict[str, dict]]:
+    reqs = []
+    for k, code in strategies.items():
+        for iid in instance_ids:
+            req = {"job": job_name, "strategy_code": code, "instance_id": iid,
+                   "time_limit": time_limit, "repeats": repeats, "keep_output": keep_output}
+            if instances and iid in instances:
+                req["instance"] = instances[iid]
+            reqs.append((k, req))
     out: dict[str, dict[str, dict]] = {k: {} for k in strategies}
     transport_failures = 0
     with ThreadPoolExecutor(max_workers=64) as pool:
@@ -57,5 +63,5 @@ def run_batch(job_name: str, strategies: dict[str, str], instance_ids: list[str]
         print(f"[runner] {transport_failures}/{len(reqs)} Lambda invocations failed in transport; "
               f"running the batch locally", flush=True)
         from engine.runner.local import run_batch as local_batch
-        return local_batch(job_name, strategies, instance_ids, time_limit, repeats)
+        return local_batch(job_name, strategies, instance_ids, time_limit, repeats, instances, keep_output)
     return out
